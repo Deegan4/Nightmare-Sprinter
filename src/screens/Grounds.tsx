@@ -5,6 +5,7 @@ import { G_POINTS, LIKELY_SAME, W_POINTS, type GroundPoint } from '../../shared/
 import { Icon } from '../components/icons';
 import { Chips, PageHead, Prov } from '../components/ui';
 import { GroundMap, OUR_PROBLEM } from '../illus/grounds';
+import { FindG302 } from '../illus/find-g302';
 import { list, useStore } from '../lib/store';
 import { openSheet } from './sheets';
 
@@ -58,6 +59,12 @@ export function Grounds() {
       <p class="small muted xr-hint">Swipe the map sideways to see it all →</p>
       <p class="small muted" style="margin:8px 0 0">Every location below is printed in the manuals. <Prov p="SOURCE" /> The manuals name the area, not the exact bolt: mark the bolt on a photo and it turns CONFIRMED.</p>
 
+      <section class="section" id="find-g302">
+        <div class="section-head"><h2>Where to find G302 (the SAM’s second ground)</h2></div>
+        <p class="small muted" style="margin:0 0 8px">Search area from the two manuals, not a measured spot. <Prov p="HYPOTHESIS" /> G302 = W43/1 because both list the same six parts.</p>
+        <div class="xr-wrap"><FindG302 /></div>
+        <button type="button" class="btn sm" style="margin-top:10px" onClick={() => openSheet('photo', { caption: 'Ground G302 / W43/1 (left firewall)' })}><Icon name="camera" />Found it: photograph and mark G302</button>
+      </section>
       <section class="section">
         <div class="section-head"><h2>G-numbers · System Wiring Diagram</h2></div>
         <p class="small muted" style="margin:0 0 8px">Figs. 25-27 “Ground Distribution Circuit”, plus Figs. 1, 24, 30, 40.</p>
