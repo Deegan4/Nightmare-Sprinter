@@ -2,7 +2,7 @@ import type { Reading, Rec, Step } from '../../shared/types';
 import { CONDITIONS } from '../../shared/types';
 import { evaluate } from '../../shared/rules';
 import { Icon } from '../components/icons';
-import { Prov, VerdictBadge, ago } from '../components/ui';
+import { Prov, VerdictBadge, ago, ask } from '../components/ui';
 import { rule } from '../lib/data';
 import { get, logEvent, patch, remove } from '../lib/store';
 import { PhotoThumb } from './sheets';
@@ -33,7 +33,7 @@ export function ReadingRow({ r, showStep }: { r: Rec<Reading>; showStep?: boolea
           <p>{ev.detail}</p>
           {ru && <p class="muted">Rule source: {ru.source}. This compares a number to a rule of thumb; it does not prove any part is bad.</p>}
           {d.note && <p><b>Note:</b> {d.note}</p>}
-          <button type="button" class="btn danger sm" onClick={async () => { if (confirm('Delete this reading?')) { await remove(r.id); await logEvent('delete', 'reading', r.id, `Deleted reading "${d.label}"`); } }}><Icon name="trash" />Delete</button>
+          <button type="button" class="btn danger sm" onClick={async () => { if (await ask('Delete this reading?')) { await remove(r.id); await logEvent('delete', 'reading', r.id, `Deleted reading "${d.label}"`); } }}><Icon name="trash" />Delete</button>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
 import type { Evidence, Reading, Step, Suspect, SuspectState } from '../../shared/types';
 import { Icon } from '../components/icons';
-import { Chips, PageHead, Prov, Sheet, Status } from '../components/ui';
+import { Chips, PageHead, Prov, Sheet, Status, ask } from '../components/ui';
 import { SymptomMap } from '../illus/symptoms';
 import { evidence, readings, steps, suspects } from '../lib/data';
 import { go, href } from '../lib/router';
@@ -53,7 +53,7 @@ export function SuspectDetail({ id }: { id: string }) {
 
   const setState = async (state: SuspectState) => {
     if (state === s.state) return;
-    if (state === 'confirmed' && !confirm('Mark as CONFIRMED? Only do this when measurements on this van prove it.')) return;
+    if (state === 'confirmed' && !await ask('Mark as CONFIRMED? Only do this when measurements on this van prove it.')) return;
     await patch<Suspect>(id, { state, ...(state === 'confirmed' ? { provenance: 'CONFIRMED' as const } : {}) });
     await logEvent('suspect', 'suspect', id, `Suspect "${s.title}" → ${state.replace('_', ' ')}`);
   };
@@ -67,7 +67,7 @@ export function SuspectDetail({ id }: { id: string }) {
           return (
             <li style="padding:8px 0;border-top:1px solid var(--line)" class="row">
               <span class="grow">{e.data.text}{r && <span class="small muted"><br />Reading: {r.data.label} = {r.data.value} {r.data.unit}</span>}<span class="small muted"><br />{e.created_by}</span></span>
-              <button type="button" class="icon-btn" aria-label="Remove evidence" onClick={() => confirm('Remove this evidence?') && remove(e.id)}><Icon name="trash" /></button>
+              <button type="button" class="icon-btn" aria-label="Remove evidence" onClick={async () => (await ask('Remove this evidence?')) && remove(e.id)}><Icon name="trash" /></button>
             </li>
           );
         })}

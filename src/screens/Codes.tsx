@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
 import type { FaultCode } from '../../shared/types';
 import { Icon } from '../components/icons';
-import { Chips, PageHead, Prov, Safety, Sheet, toast } from '../components/ui';
+import { Chips, PageHead, Prov, Safety, Sheet, ask, toast } from '../components/ui';
 import { codes, photos } from '../lib/data';
 import { get, logEvent, patch, remove, save, useStore } from '../lib/store';
 import { PhotoGrid } from './sheets';
@@ -48,8 +48,8 @@ function CodeSheet({ id, onClose }: { id?: string; onClose: () => void }) {
   const cur = get<FaultCode>(id)?.data;
   const [d, setD] = useState<FaultCode>(cur ?? { module: '', code: '', description: '', status: 'active', date_read: new Date().toISOString().slice(0, 10), source: 'Manual entry', note: '', provenance: 'REPORTED' });
   const set = (p: Partial<FaultCode>) => setD({ ...d, ...p });
-  const setStatus = (s: FaultCode['status']) => {
-    if (s === 'cleared' && !confirm('Never clear before logging.\n\nIs this code (and every other code) written down or photographed? Tap OK only if yes.')) return;
+  const setStatus = async (s: FaultCode['status']) => {
+    if (s === 'cleared' && !await ask('Never clear before logging.\n\nIs this code (and every other code) written down or photographed? Tap Yes only if it is.')) return;
     set({ status: s });
   };
   const submit = async (e: Event) => {
@@ -83,7 +83,7 @@ function CodeSheet({ id, onClose }: { id?: string; onClose: () => void }) {
         <div class="row" style="margin-top:12px"><span class="kicker">Provenance</span><Prov p={d.provenance} onChange={(p) => set({ provenance: p })} /></div>
         {id && <div style="margin-top:14px"><div class="kicker" style="margin-bottom:6px">Scanner screen photo</div><PhotoGrid ids={photos((p) => p.code_id === id).map((p) => p.id)} addLinks={{ code_id: id }} addLabel="Photo of scanner screen" /></div>}
         <button class="btn primary block" style="margin-top:16px" type="submit"><Icon name="check" />Save code</button>
-        {id && <button type="button" class="btn danger block" style="margin-top:10px" onClick={async () => { if (confirm('Delete this code from the log?')) { await remove(id); onClose(); } }}><Icon name="trash" />Delete from log</button>}
+        {id && <button type="button" class="btn danger block" style="margin-top:10px" onClick={async () => { if (await ask('Delete this code from the log?')) { await remove(id); onClose(); } }}><Icon name="trash" />Delete from log</button>}
       </form>
     </Sheet>
   );

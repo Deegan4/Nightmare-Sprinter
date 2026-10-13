@@ -112,8 +112,8 @@ log(`AT4 ${n} reference pages show provenance + source`);
 
 // --- AT6: revoke Dad's link
 await K.goto(`${BASE}/#/share`);
-K.on('dialog', (d) => d.accept());
 await K.getByRole('button', { name: 'Revoke' }).first().click();
+await K.getByRole('button', { name: 'Yes' }).click();
 await K.getByText(/revoked/).first().waitFor();
 await D.reload();
 await D.getByText(/signed out|Private app/i).first().waitFor({ timeout: 8000 });

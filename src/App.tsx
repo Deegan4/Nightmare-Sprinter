@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { Icon } from './components/icons';
-import { ToastHost } from './components/ui';
+import { ConfirmHost, ToastHost } from './components/ui';
 import { status, useStore } from './lib/store';
 import { useRoute } from './lib/router';
 import { DEMO, syncNow } from './lib/sync';
@@ -110,6 +110,7 @@ export function App() {
       </nav>
       <SheetHost />
       <ToastHost />
+      <ConfirmHost />
     </>
   );
 }

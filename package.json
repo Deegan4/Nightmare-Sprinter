@@ -12,7 +12,8 @@
     "db:migrate:local": "wrangler d1 migrations apply van-fix --local",
     "db:migrate:remote": "wrangler d1 migrations apply van-fix --remote",
     "deploy": "vite build && wrangler deploy",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "build:artifact": "VITE_DEMO=1 vite build --outDir dist-demo && node scripts/build-artifact.mjs"
   },
   "repository": {
     "type": "git",

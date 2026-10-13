@@ -119,3 +119,24 @@ export const ago = (t: number) => {
   return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 export const when = (t: number) => new Date(t).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+let confirmSet: ((c: { msg: string; resolve: (v: boolean) => void } | null) => void) | null = null;
+/** In-app confirm (native confirm() is unreliable in installed/embedded web apps). */
+export function ask(msg: string): Promise<boolean> {
+  return new Promise((resolve) => (confirmSet ? confirmSet({ msg, resolve }) : resolve(false)));
+}
+export function ConfirmHost() {
+  const [c, set] = useState<{ msg: string; resolve: (v: boolean) => void } | null>(null);
+  useEffect(() => { confirmSet = set; }, []);
+  if (!c) return null;
+  const done = (v: boolean) => { c.resolve(v); set(null); };
+  return (
+    <Sheet title="Are you sure?" onClose={() => done(false)}>
+      <p style="white-space:pre-line;font-size:18px">{c.msg}</p>
+      <div class="btn-row" style="margin-top:14px">
+        <button type="button" class="btn ghost" onClick={() => done(false)}>Cancel</button>
+        <button type="button" class="btn primary" onClick={() => done(true)}>Yes</button>
+      </div>
+    </Sheet>
+  );
+}

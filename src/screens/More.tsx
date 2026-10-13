@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import type { Fact, Provenance, Rec, Step, TimelineEvent, Vehicle, Zone } from '../../shared/types';
 import { buildSummary } from '../../shared/summary';
 import { Icon } from '../components/icons';
-import { Chips, PageHead, Prov, Sheet, Status, ago, toast, when } from '../components/ui';
+import { Chips, PageHead, Prov, Sheet, Status, ago, ask, toast, when } from '../components/ui';
 import { ZONE_SCENES } from '../illus/scenes';
 import { PinKey, PinLegend, VanSide, VanTop } from '../illus/van';
 import { photos, refs, zones } from '../lib/data';
@@ -247,7 +247,7 @@ export function Share() {
     } catch (e) { setErr((e as Error).message); }
   };
   const revoke = async (id: string) => {
-    if (!confirm('Revoke this link? Anyone who joined with it is signed out on their next request.')) return;
+    if (!await ask('Revoke this link? Anyone who joined with it is signed out on their next request.')) return;
     await api(`/api/invites/${id}/revoke`, { method: 'POST' });
     load();
   };
@@ -300,7 +300,7 @@ export function Summary() {
       <div class="no-print"><PageHead title="Summary" back="#/more" kicker="For Claude or a mechanic" /></div>
       <div class="btn-row no-print" style="margin:12px 0">
         <button type="button" class="btn primary" onClick={() => navigator.clipboard.writeText(text).then(() => toast('Summary copied'), () => toast('Copy failed: select the text below'))}><Icon name="copy" />Copy summary</button>
-        <button type="button" class="btn" onClick={() => print()}><Icon name="print" />Print / PDF</button>
+        {!DEMO && <button type="button" class="btn" onClick={() => print()}><Icon name="print" />Print / PDF</button>}
       </div>
       <pre class="summary-pre">{text}</pre>
     </div>
@@ -352,12 +352,12 @@ export function Settings() {
       <section class="section card">
         <h3>Your data</h3>
         <p class="small muted">Download everything (readings, notes, codes, suspects) as a JSON file.</p>
-        <button type="button" class="btn block" onClick={exportAll}><Icon name="download" />Export all data</button>
+        {DEMO ? <p class="small">Export is available in the installed app.</p> : <button type="button" class="btn block" onClick={exportAll}><Icon name="download" />Export all data</button>}
       </section>
       {!DEMO && (
         <section class="section">
           <button type="button" class="btn danger block" onClick={async () => {
-            if (!confirm('Sign out on this phone? Unsynced changes on this phone will be lost. You will need the invite link again.')) return;
+            if (!await ask('Sign out on this phone? Unsynced changes on this phone will be lost. You will need the invite link again.')) return;
             await api('/api/logout', { method: 'POST' }).catch(() => {});
             await idbClear();
             location.hash = '#/';
