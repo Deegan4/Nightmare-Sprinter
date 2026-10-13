@@ -40,5 +40,8 @@
     "wrangler": "^4.149.0"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  }
 }
