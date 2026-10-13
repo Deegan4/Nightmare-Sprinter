@@ -61,13 +61,20 @@ describe('seed content', () => {
 
 describe('fault codes from the 2026-10-09 TOPDON report', () => {
   const codes = seed.filter((r) => r.kind === 'fault_code');
-  it('has all 24 codes, each REPORTED with a description', () => {
-    expect(codes).toHaveLength(24);
+  it('has all 24 codes from 10-09 and 13 from 10-13, each REPORTED with a description', () => {
+    expect(codes.filter((c) => c.data.date_read === '2026-10-09')).toHaveLength(24);
+    expect(codes.filter((c) => c.data.date_read === '2026-10-13')).toHaveLength(13);
     for (const c of codes) { expect(c.data.provenance).toBe('REPORTED'); expect(c.data.description.length).toBeGreaterThan(5); }
   });
   it('uses the report\'s code 901C, not the earlier typo 901D', () => {
     expect(codes.some((c) => c.data.code === '901C')).toBe(true);
     expect(codes.some((c) => c.data.code === '901D')).toBe(false);
+  });
+  it('10-13 scan: ignition codes gone, SAM 90B5 and ESP 43C0 present', () => {
+    const d13 = codes.filter((c) => c.data.date_read === '2026-10-13').map((c) => c.data.code);
+    expect(d13).not.toContain('9007');
+    expect(d13).toContain('90B5');
+    expect(d13).toContain('43C0');
   });
   it('records the ignition switch terminal 15 / 15R faults', () => {
     expect(codes.filter((c) => c.data.code === '9007' || c.data.code === '9009')).toHaveLength(2);

@@ -53,6 +53,9 @@ const facts: [string, Fact][] = [
   ['fact-src-g200', { text: 'Manual: the ignition switch (8 C2, 7 C4), steering control module (8 C1, 10 C2), cluster (1) and A/C heater control (2 C3, 8 C4) all ground at G200, "right rear of engine compt".', provenance: 'SOURCE', source: 'System Wiring Diagram.pdf Fig. 25', tags: ['Grounds', 'A/C', 'Horn'] }],
   ['fact-src-g305', { text: 'Manual: the trailer tow lighting module (3 C1) and the transmission control module (30 C1) share ground G305, "lower left side of vehicle". The dynamics sensor, tire-pressure module, PSM and data link connector ground at G301, also "lower left side of vehicle".', provenance: 'SOURCE', source: 'System Wiring Diagram.pdf Figs. 24, 26', tags: ['Grounds', 'Trailer'] }],
   ['fact-g302-w43', { text: 'G302 (the SAM\'s second ground) is probably the same bolt as the Mercedes "left firewall ground point" W43/1, which Mercedes lists under the LEFT FOOTWELL: both manuals list the same parts on it (SAM, clutch pedal switch, parking brake switch, passenger-side mirror, side airbag, passenger entry lamp). Look on the driver-side firewall, footwell side first, near the kick-panel fuse/relay box. Confirm by finding brown wires going into the SAM connector.', provenance: 'HYPOTHESIS', source: 'Comparison of System Wiring Diagram Fig. 26 and Fuse Block, Grounds manual PE54.00-D-2000AG', tags: ['Grounds', 'SAM'] }],
+  ['fact-scan-2', { text: 'TOPDON scan 2026-10-13 17:07 (same scanner SN 988311103781, V10.50): 13 fault codes in 5 of 16 modules: SRS 1, engine (CDI) 4, ESP 1, instrument cluster 1, SAM 6. No fault: TPMS, MRM steering column, AdBlue, radio, EIS ignition switch, TCM, A/C, upper control panel, PTC heater, EWM selector, driver door.', provenance: 'REPORTED', source: 'TOPDON online report 2026-10-13: https://online-report.topdoninfo.com/Home/Topdon/topdonReportDetail/diagnose_record_id/85506ec2ge54OMOMKwDhtZtZOM/report_type/TC/l/en-us', tags: [] }],
+  ['fact-scan-compare', { text: 'Compared with 2026-10-09: GONE on 10-13: EIS 9007 / 9009 (terminal 15 / 15R short or open), SAM 9091 / 9090 (terminal 15 / 15R CAN signal implausible), all the "no CAN message from N73 / S98" codes (engine 104000, 105B00, 10BC00; ESP 475C, 5401; TCM C164, C141; EWM 0005) and ESP 4804 (coding string invalid). STILL THERE: SAM 90B5 "control unit is faulty", SAM 9042, 9001, 909F, 9004, 901C (all current), cluster 9100 (engine CAN, stored), engine 100B00, 155C00, 161700, 161800. NEW: ESP 43C0 "N30/4 voltage supply too low" (current) and SRS 9013 "S68/1 driver seat belt buckle switch open circuit" (current).', provenance: 'REPORTED', source: 'TOPDON reports 2026-10-09 and 2026-10-13', tags: ['SAM', 'Network'] }],
+  ['fact-codes-cleared', { text: 'Were fault codes cleared between the 10-09 and 10-13 scans (by anyone, with any tool), or the battery disconnected? If NOT, the ignition-switch and network codes went away on their own and the 10-09 lead is weaker. If they WERE cleared, those codes did not come back by 10-13.', provenance: 'UNKNOWN', source: '', tags: ['Network'] }],
   ['fact-prefuse-ohm', { text: '150 A pre-fuse read ≈2.2 Ω, but the meter leads alone read ≈2.1 Ω. This test proves nothing; use voltage drop instead.', provenance: 'CONFIRMED', source: 'Owner measurement', tags: ['Power distribution'] }],
 ];
 
@@ -202,7 +205,7 @@ const steps: [string, Step][] = [
 const suspects: [string, Suspect][] = [
   ['sus-sam', {
     position: 1, title: 'The SAM (body-control brain)', short: 'SAM', state: 'untested', provenance: 'HYPOTHESIS',
-    summary: 'The SAM (N10) sits in the fuse/relay box in the left kick panel with the horn relay (k1) and horn fuse (f1). The A/C control (S98) and trailer module (N28/1) talk to it over CAN B. The used SAM’s coding is unknown. Note: all three faults started before the SAM was swapped.',
+    summary: 'The SAM (N10) sits in the fuse/relay box in the left kick panel with the horn relay (k1) and horn fuse (f1). The A/C control (S98) and trailer module (N28/1) talk to it over CAN B. The used SAM’s coding is unknown. On BOTH scans (10-09 and 10-13) the SAM reports 90B5 "control unit is faulty" as current, plus open circuits on side lights, side marker / licence lamps and the brake wear sensor. Note: all three faults started before the SAM was swapped.',
     change_my_mind: 'Horn plug gets 12 V when pressed, and SAM coding reads correct for this VIN.', symptom_links: ['horn', 'ac', 'trailer'],
   }],
   ['sus-grounds', {
@@ -212,7 +215,7 @@ const suspects: [string, Suspect][] = [
   }],
   ['sus-power', {
     position: 3, title: 'SAM power feed (150 A / 80 A fuses)', short: 'Power feed', state: 'untested', provenance: 'HYPOTHESIS',
-    summary: '150 A (F59.5, terminal 30) and 80 A (F59.3, terminal 30z) fuses feed the SAM/SRB, where the horn relay lives.',
+    summary: '150 A (F59.5, terminal 30) and 80 A (F59.3, terminal 30z) fuses feed the SAM/SRB, where the horn relay lives. 10-13 scan: ESP 43C0 "voltage supply too low" (current), and the battery read 12.40 V resting, right at the manual\'s 12.4 V limit.',
     change_my_mind: 'Voltage drop across both fuses is 0.2 V or less with key on and load present.', symptom_links: ['horn', 'trailer'],
   }],
   ['sus-ac', {
@@ -222,12 +225,12 @@ const suspects: [string, Suspect][] = [
   }],
   ['sus-t15', {
     position: 0, title: 'Ignition feed (EIS N73 / Terminal 15 & 15R)', short: 'Ignition', state: 'untested', provenance: 'HYPOTHESIS',
-    summary: 'The scan shows the ignition switch storing Terminal 15 and 15R short/open faults (9007, 9009), four other modules missing its CAN messages, and the SAM calling its terminal 15/15R signals implausible. The horn relay k1 is fed through the Terminal 15 relay k8 (manual Fig. 30), so a bad ignition feed could take out several systems at once.',
+    summary: 'The 10-09 scan showed the ignition switch storing Terminal 15 and 15R short/open faults (9007, 9009), four other modules missing its CAN messages, and the SAM calling its terminal 15/15R signals implausible. On the 10-13 scan ALL of those are gone and the ignition switch reports no fault: unless codes were cleared in between, this lead is weaker. The horn relay k1 is fed through the Terminal 15 relay k8 (manual Fig. 30), so the f18 / f11 key-on check is still worth 2 minutes.',
     change_my_mind: 'Terminal 15 and 15R fuses read battery voltage with key on, relays k8/k6 switch, and EIS 9007/9009 do not come back after a key cycle.', symptom_links: ['horn', 'ac', 'trailer'],
   }],
   ['sus-can', {
     position: 5, title: 'Network (CAN B / engine CAN)', short: 'Network', state: 'untested', provenance: 'HYPOTHESIS',
-    summary: 'Cluster fault 9100 (engine CAN) and ESP/TCM CAN faults suggest bus trouble.',
+    summary: '10-09: cluster 9100 (engine CAN) plus ESP/TCM/engine/EWM "no CAN message" codes. 10-13: only cluster 9100 remains, as stored; the "no CAN message" codes are gone.',
     change_my_mind: 'A read-only scan shows no current CAN / network faults.', symptom_links: ['horn', 'ac', 'trailer'],
   }],
 ];
@@ -263,6 +266,26 @@ const dtc: [string, string, string, 'active' | 'stored'][] = [
 ];
 const codes: [string, FaultCode][] = dtc.map(([module, code, description, status]) => [`dtc-${code.toLowerCase()}`, {
   module, code, description, status, date_read: '2026-10-09', source: TOPDON, note: '', provenance: 'REPORTED',
+} as FaultCode]);
+// Every code from the TOPDON report of 2026-10-13 (link in fact-scan-2), word for word.
+const TOPDON2 = 'TOPDON report 2026-10-13';
+const dtc2: [string, string, string, 'active' | 'stored'][] = [
+  ['SRS (airbag)', '9013', 'S68/1 (Driver Seat Belt Buckle Switch) - Open Circuit', 'active'],
+  ['Engine (CDI4 6-cyl)', '100B00', 'The Upper Limit Value Of Component B2/14 (Hot Film Mass Air Flow Sensor) Has Been Reached.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '155C00', 'Signal Engine Off Time From Control Unit KI Is Implausible.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '161700', 'Component B2/14b1 (Intake Air Temperature Sensor) Not Within Permissible Range Of Values On/Off Ratio Of Reference Signal Is Outside Of Permissible Range.', 'active'],
+  ['Engine (CDI4 6-cyl)', '161800', 'Component B2/14b1 (Intake Air Temperature Sensor) Not Within Permissible Range Of Values There Is A Frequency Or Pulse Width Modulation Fault.', 'active'],
+  ['ESP', '43C0', 'N30/4 (ESP Control Unit) - The Voltage Supply Is Too Low.', 'active'],
+  ['Instrument cluster', '9100', 'Engine CAN Bus - CAN Bus-fault', 'stored'],
+  ['SAM', '9042', 'E15/1 (Front Dome Lamp With Switch) - Short Circuit To Positive', 'active'],
+  ['SAM', '9001', 'Left Side Light - Open Circuit In Wiring', 'active'],
+  ['SAM', '909F', 'Brake Wear Sensor - Open Circuit In Wiring', 'active'],
+  ['SAM', '9004', 'Right Side Light - Open Circuit In Wiring', 'active'],
+  ['SAM', '901C', '[License Plate Lights - Open Circuit In Wiring] Or [Side Marker Lamps - Open Circuit In Wiring]', 'active'],
+  ['SAM', '90B5', 'The Control Unit Is Faulty.', 'active'],
+];
+const codes2: [string, FaultCode][] = dtc2.map(([module, code, description, status]) => [`dtc-1013-${code.toLowerCase()}`, {
+  module, code, description, status, date_read: '2026-10-13', source: TOPDON2, note: '', provenance: 'REPORTED',
 } as FaultCode]);
 /** Seed ids replaced by later seed content; ensureSeeded marks them deleted if nobody edited them. */
 export const RETIRED_SEED_IDS = [
@@ -354,7 +377,7 @@ export function seedRecords(): Rec[] {
   const out: Rec[] = [rec('vehicle', VEHICLE_ID, vehicle, i++)];
   const add = (kind: Kind, list: [string, any][]) => list.forEach(([id, d]) => out.push(rec(kind, id, d, i++)));
   add('fact', facts); add('rule', rules); add('step', steps); add('suspect', suspects);
-  add('fault_code', codes); add('reference_page', refs); add('zone', zones); add('fuse', fuses);
+  add('fault_code', codes); add('fault_code', codes2); add('reference_page', refs); add('zone', zones); add('fuse', fuses);
   out.push(rec('event', 'ev-seed', { type: 'seed', ref_kind: 'vehicle', ref_id: VEHICLE_ID, summary: 'Project created with vehicle facts, 5 test steps, 5 suspects and the scan codes', actor: 'Van Fix' }, i++));
   return out;
 }
