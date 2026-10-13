@@ -1,0 +1,43 @@
+{
+  "name": "van-fix",
+  "version": "1.0.0",
+  "description": "Private PWA for diagnosing one 2012 Sprinter: test plan, readings, suspects, codes, wiring references.",
+  "scripts": {
+    "dev": "vite",
+    "dev:worker": "wrangler dev",
+    "build": "vite build",
+    "build:demo": "VITE_DEMO=1 vite build --outDir dist-demo",
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply van-fix --local",
+    "db:migrate:remote": "wrangler d1 migrations apply van-fix --remote",
+    "deploy": "vite build && wrangler deploy",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deegan4/Nightmare-Sprinter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Deegan4/Nightmare-Sprinter/issues"
+  },
+  "homepage": "https://github.com/Deegan4/Nightmare-Sprinter#readme",
+  "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "hono": "^4.13.13",
+    "preact": "^11.0.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261012.1",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/node": "^26.6.5",
+    "playwright": "^1.56.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4",
+    "wrangler": "^4.149.0"
+  },
+  "private": true,
+  "type": "module"
+}

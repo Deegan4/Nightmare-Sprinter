@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Convert pages of a PRIVATE manual PDF to images, upload them to R2, and attach
+# them to one Library page. The PDFs and images never go into git.
+#
+# Usage:
+#   scripts/pdf-to-images <file.pdf> <reference-page-id> <first-page> [last-page] [--local|--remote]
+# Example (horn diagram is page 30 of the wiring set):
+#   scripts/pdf-to-images reference-source/sprinter-wiring.pdf ref-horn 30 30 --remote
+#
+# Reference page ids: ref-horn ref-trailer ref-power ref-ac ref-grounds-a ref-body-control ref-grounds-b ref-fuse-box
+set -euo pipefail
+
+PDF="${1:?pdf path}"; REF="${2:?reference page id}"; FIRST="${3:?first page}"; LAST="${4:-$3}"
+MODE="${5:---local}"
+BUCKET="van-fix"; DB="van-fix"
+command -v pdftoppm >/dev/null || { echo "Install poppler-utils (pdftoppm) first"; exit 1; }
+[[ "$REF" =~ ^[a-z0-9-]+$ ]] || { echo "bad reference id"; exit 1; }
+
+OUT="reference-images/$REF"
+rm -rf "$OUT"; mkdir -p "$OUT"
+pdftoppm -r 150 -png -f "$FIRST" -l "$LAST" "$PDF" "$OUT/page"
+
+KEYS=()
+for f in "$OUT"/page-*.png; do
+  key="ref/$REF/$(basename "$f")"
+  npx wrangler r2 object put "$BUCKET/$key" --file "$f" --content-type image/png "$MODE"
+  KEYS+=("\"$key\"")
+done
+JSON_KEYS="[$(IFS=,; echo "${KEYS[*]}")]"
+NOW=$(($(date +%s) * 1000))
+
+# Attach the images to the Library page and bump its sequence so every phone syncs it.
+npx wrangler d1 execute "$DB" "$MODE" --command "
+UPDATE counter SET value = value + 1 WHERE name = 'seq';
+UPDATE records SET
+  data = json_set(data, '$.image_key', json_extract('$JSON_KEYS', '\$[0]'), '$.image_keys', json('$JSON_KEYS')),
+  updated_at = $NOW,
+  seq = (SELECT value FROM counter WHERE name = 'seq')
+WHERE id = '$REF' AND kind = 'reference_page';"
+echo "Attached ${#KEYS[@]} page image(s) to $REF"
