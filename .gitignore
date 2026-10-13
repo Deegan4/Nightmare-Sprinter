@@ -8,3 +8,4 @@ dist-demo/
 reference-source/*
 !reference-source/README.md
 reference-images/
+owner-key.txt

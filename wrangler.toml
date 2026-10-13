@@ -11,7 +11,7 @@ run_worker_first = ["/api/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "van-fix"
-database_id = "REPLACE_WITH_D1_ID"
+database_id = "ed245535-d8d3-4cd3-853a-02e33f6f9338"
 migrations_dir = "migrations"
 
 [[r2_buckets]]
