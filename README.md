@@ -38,6 +38,12 @@ Download two PDFs from your Google Drive into `reference-source/` (git-ignored):
 scripts/load-manual-pages.sh --remote
 ```
 That uploads every Library figure (horn, trailer, A/C, power distribution, grounds, fuse/relay box) at the right pages.
+No R2 bucket? Photos, manual pages and backups are stored in D1 instead. Load pages with
+`STORAGE=d1 scripts/load-manual-pages.sh --remote`.
+
+### Current live deployment
+Deployed with `wrangler deploy --temporary -c wrangler.temporary.toml` (no-login preview account, D1 file storage).
+Seed SQL: `node scripts/seed-sql.mjs`. Claim the account from the claim URL Wrangler prints to keep it.
 
 ## Develop
 See `CLAUDE.md` for all commands, the data model and the hard rules (provenance labels, no invented fuse numbers).

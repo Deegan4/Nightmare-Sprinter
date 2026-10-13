@@ -5,7 +5,7 @@ import { seedRecords } from '../shared/seed';
 
 export interface Env {
   DB: D1Database;
-  /** Optional: without R2, photos stay on the phones and manual pages are unavailable. */
+  /** Optional: without R2, files are stored in D1 (blob_chunks). */
   BUCKET?: R2Bucket;
   ASSETS: Fetcher;
   OWNER_KEY?: string;
@@ -36,7 +36,7 @@ function timingSafeEqual(a: string, b: string) {
 /** Insert any seed records that are missing (new seed content reaches existing installs; edits are never overwritten). */
 async function ensureSeeded(db: D1Database) {
   const seed = seedRecords();
-  const { results } = await db.prepare(`SELECT id FROM records WHERE id IN (${seed.map(() => '?').join(',')})`).bind(...seed.map((r) => r.id)).all<{ id: string }>();
+  const { results } = await db.prepare("SELECT id FROM records WHERE created_by = 'seed'").all<{ id: string }>();
   const have = new Set(results.map((r) => r.id));
   await upsert(db, seed.filter((r) => !have.has(r.id)));
 }
@@ -92,11 +92,34 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS invites (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, label TEXT NOT NULL, role TEXT NOT NULL, created_at INTEGER NOT NULL, revoked_at INTEGER)',
   'CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, display_name TEXT NOT NULL, role TEXT NOT NULL, invite_id TEXT NOT NULL, session_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0)',
   'CREATE TABLE IF NOT EXISTS rate (ip TEXT NOT NULL, win INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (ip, win))',
+  'CREATE TABLE IF NOT EXISTS blob_chunks (key TEXT NOT NULL, idx INTEGER NOT NULL, content_type TEXT NOT NULL, data BLOB NOT NULL, PRIMARY KEY (key, idx))',
 ];
 let schemaReady: Promise<unknown> | null = null;
 const ensureSchema = (db: D1Database) => (schemaReady ??= db.batch(SCHEMA.map((q) => db.prepare(q))).catch((e) => { schemaReady = null; throw e; }));
 
-const noBucket = (c: any) => c.json({ error: 'Photo storage (R2) is not set up yet. Photos stay saved on this phone.' }, 503);
+// ---------- file storage: R2 when bound, otherwise chunked rows in D1 ----------
+const CHUNK = 1024 * 1024;
+export async function putFile(env: Env, key: string, body: ArrayBuffer, type: string) {
+  if (env.BUCKET) { await env.BUCKET.put(key, body, { httpMetadata: { contentType: type } }); return; }
+  const stmts = [env.DB.prepare('DELETE FROM blob_chunks WHERE key = ?').bind(key)];
+  for (let i = 0, n = 0; i < Math.max(body.byteLength, 1); i += CHUNK, n++) {
+    stmts.push(env.DB.prepare('INSERT INTO blob_chunks (key, idx, content_type, data) VALUES (?, ?, ?, ?)').bind(key, n, type, body.slice(i, i + CHUNK)));
+  }
+  await env.DB.batch(stmts);
+}
+export async function getFile(env: Env, key: string): Promise<{ body: BodyInit; type: string } | null> {
+  if (env.BUCKET) {
+    const obj = await env.BUCKET.get(key);
+    return obj ? { body: obj.body, type: obj.httpMetadata?.contentType ?? 'application/octet-stream' } : null;
+  }
+  const { results } = await env.DB.prepare('SELECT content_type, data FROM blob_chunks WHERE key = ? ORDER BY idx').bind(key).all<{ content_type: string; data: ArrayBuffer | number[] }>();
+  if (!results.length) return null;
+  const parts = results.map((r) => (r.data instanceof ArrayBuffer ? new Uint8Array(r.data) : new Uint8Array(r.data)));
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return { body: out, type: results[0].content_type };
+}
 
 const app = new Hono<Ctx>();
 
@@ -207,18 +230,16 @@ app.put('/api/photos/:id', async (c) => {
   if (len > MAX_PHOTO) return c.json({ error: 'Photo too large' }, 413);
   const body = await c.req.arrayBuffer();
   if (body.byteLength > MAX_PHOTO) return c.json({ error: 'Photo too large' }, 413);
-  if (!c.env.BUCKET) return noBucket(c);
-  await c.env.BUCKET.put(`photos/${id}.jpg`, body, { httpMetadata: { contentType: 'image/jpeg' } });
+  await putFile(c.env, `photos/${id}.jpg`, body, 'image/jpeg');
   return c.json({ ok: true });
 });
 
 async function serveObject(c: any, key: string) {
-  if (!c.env.BUCKET) return noBucket(c);
-  const obj = await c.env.BUCKET.get(key);
+  const obj = await getFile(c.env, key);
   if (!obj) return c.json({ error: 'not found' }, 404);
   return new Response(obj.body, {
     headers: {
-      'Content-Type': obj.httpMetadata?.contentType ?? 'image/jpeg',
+      'Content-Type': obj.type,
       'Cache-Control': 'private, max-age=31536000, immutable',
       'X-Robots-Tag': 'noindex, nofollow',
     },
@@ -229,6 +250,16 @@ app.get('/api/ref-image/*', (c) => {
   const key = c.req.path.slice('/api/ref-image/'.length);
   if (!/^ref\/[\w./-]+$/.test(key) || key.includes('..')) return c.json({ error: 'bad key' }, 400);
   return serveObject(c, key);
+});
+
+// Owner can upload manual page images through the app (used when there is no R2 bucket).
+app.put('/api/ref-image/*', ownerOnly, async (c) => {
+  const key = c.req.path.slice('/api/ref-image/'.length);
+  if (!/^ref\/[\w./-]+$/.test(key) || key.includes('..')) return c.json({ error: 'bad key' }, 400);
+  const body = await c.req.arrayBuffer();
+  if (body.byteLength > 12 * 1024 * 1024) return c.json({ error: 'too large' }, 413);
+  await putFile(c.env, key, body, c.req.header('content-type') ?? 'image/png');
+  return c.json({ ok: true });
 });
 
 app.get('/api/members', async (c) => {
@@ -276,8 +307,13 @@ app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 export default {
   fetch: app.fetch,
   async scheduled(_e: ScheduledController, env: Env) {
-    if (!env.BUCKET) return;
+    await ensureSchema(env.DB);
     const data = await exportAll(env.DB);
-    await env.BUCKET.put(`backups/${data.exported_at.slice(0, 10)}.json`, JSON.stringify(data), { httpMetadata: { contentType: 'application/json' } });
+    await putFile(env, `backups/${data.exported_at.slice(0, 10)}.json`, new TextEncoder().encode(JSON.stringify(data)).buffer as ArrayBuffer, 'application/json');
+    if (!env.BUCKET) {
+      // Keep the last 7 nightly backups when they live in D1.
+      const cutoff = new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10);
+      await env.DB.prepare("DELETE FROM blob_chunks WHERE key LIKE 'backups/%' AND key < ?").bind(`backups/${cutoff}`).run();
+    }
   },
 };

@@ -63,6 +63,13 @@ const t1 = Date.now();
 await K.goto(`${BASE}/#/`);
 await K.getByText('Seat-base ground W71/3 drop').first().waitFor({ timeout: 12000 });
 log(`AT1 Kollin sees Dad's reading after ${((Date.now() - t1) / 1000).toFixed(1)}s`);
+// Dad's photo must reach Kollin's phone too (served from R2, or D1 when there is no bucket).
+await K.goto(`${BASE}/#/step/step-4`);
+const photoSrc = await K.locator('.photo-grid img').first().getAttribute('src', { timeout: 15000 });
+assert.ok(photoSrc?.startsWith('/api/photos/'), 'photo comes from the server');
+const photoStatus = await K.evaluate(async (u) => (await fetch(u)).status, photoSrc);
+assert.equal(photoStatus, 200, 'photo downloads on the other phone');
+log('AT1 photo synced and viewable on the other phone');
 
 // --- AT3: 0.1 V passes
 await K.getByRole('button', { name: /Add reading, photo or note/ }).click();
