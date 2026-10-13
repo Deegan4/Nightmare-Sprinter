@@ -19,6 +19,7 @@ export function More() {
   useStore();
   const items: [string, string, string, string][] = [
     ['/sheet', 'plan', 'Wiring sheet', 'One page: components, power flow, fuses, circuits, photos'],
+    ['/xray', 'bolt', 'See-through wiring', 'X-ray of the van: every part, fuse box, ground and circuit'],
     ['/map', 'map', 'Where things are', 'Van map: tap engine bay, footwell, seat, rear'],
     ['/timeline', 'clock', 'Timeline', 'Everything that was done, by who and when'],
     ['/van', 'van', 'Van facts', 'VIN, mileage, what’s been done, SAM label'],

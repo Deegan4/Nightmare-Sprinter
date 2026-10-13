@@ -5,7 +5,7 @@ import { useState } from 'preact/hooks';
 import type { Fuse, Photo, Provenance, Zone } from '../../shared/types';
 import { Icon } from '../components/icons';
 import { Prov, Sheet as Modal, Status, ask } from '../components/ui';
-import { AcCircuit, HornCircuit, PowerFlow, TrailerCircuit } from '../illus/sheet-diagrams';
+import { AcCircuit, CanNetwork, HornCircuit, IgnitionCircuit, PowerFlow, TrailerCircuit } from '../illus/sheet-diagrams';
 import { Van34 } from '../illus/van34';
 import { CircuitOverview } from '../illus/circuit';
 import { photos, steps, zones } from '../lib/data';
@@ -25,10 +25,10 @@ function markedOn(keys: string[]): { photo: string; zone?: string } | null {
 // Locations as printed in the owner's manuals (SOURCE), or "confirm" where they say nothing.
 const COMPONENTS: { name: string; where: string; prov: Provenance; keys: string[]; zone?: string }[] = [
   { name: 'Battery G1', where: 'under the driver-footwell floor · Equipment manual Fig. 2', prov: 'SOURCE', keys: ['battery'], zone: 'zone-footwell' },
-  { name: 'F59 fuses (150 A F59.5 · 80 A F59.3)', where: 'confirm on van', prov: 'UNKNOWN', keys: ['f59', '150 a', '80 a'] },
+  { name: 'F59 pre-fuse box (150 A F59.5 · 80 A F59.3)', where: 'battery compartment, left footwell · MB 2015 fuse supplement (web)', prov: 'SOURCE', keys: ['f59', '150 a', '80 a'], zone: 'zone-footwell' },
   { name: 'Fuse/relay box K40/9: SAM N10, horn relay k1, horn fuse f1 15 A', where: 'left kick panel · Fig. 30, 39', prov: 'SOURCE', keys: ['sam', 'kick', 'k40', 'horn relay'], zone: 'zone-footwell' },
   { name: 'Fuse blocks 1 & 2 (F55/1, F55/2)', where: 'top of the fuse/relay box · Fig. 39', prov: 'SOURCE', keys: ['fuse block 1', 'fuse block 2', 'f55/1', 'f55/2'], zone: 'zone-footwell' },
-  { name: 'Fuse blocks 3 & 4 (trailer fuses)', where: 'confirm on van', prov: 'UNKNOWN', keys: ['fuse block 3', 'fuse block 4', 'f55/3', 'f55/4'] },
+  { name: 'Fuse blocks 3 & 4 (trailer fuses)', where: 'box on the outside of the driver seat base · MB 2015 fuse supplement (web)', prov: 'SOURCE', keys: ['fuse block 3', 'fuse block 4', 'f55/3', 'f55/4'], zone: 'zone-seat' },
   { name: 'Under-seat box & fuse-card legend', where: 'under driver’s seat', prov: 'REPORTED', keys: ['under-seat', 'fuse card', 'fuse-card'], zone: 'zone-seat' },
   { name: 'PSM module N26/15 (not the SAM)', where: 'inside driver seat frame · Equipment manual Fig. 27', prov: 'SOURCE', keys: ['psm', 'n26'], zone: 'zone-seat' },
   { name: 'Horn 1 (H1) · ground G104', where: 'engine compartment, left · Fig. 30', prov: 'SOURCE', keys: ['horn 1', 'g104'], zone: 'zone-engine' },
@@ -185,6 +185,11 @@ export function WiringSheet() {
         <Panel title="A/C Compressor Circuit" sub="(front A/C only)" area="ac" tone="ws-green"><AcCircuit /></Panel>
         <Panel title="Horn Circuit" area="horn" tone="ws-blue"><HornCircuit /></Panel>
         <Panel title="Trailer Light Circuit" area="trl" tone="ws-purple"><TrailerCircuit /></Panel>
+        <Panel title="Ignition Feed" sub="(terminal 15 / 15R)" area="ign" tone="ws-orange"><IgnitionCircuit /></Panel>
+        <Panel title="CAN Network" sub="(who talks to whom, and what the scan said)" area="can">
+          <CanNetwork />
+          <p class="small" style="margin:6px 0 0">Four modules lost messages from the ignition switch, and two lost messages from the A/C control. A shared cause (ignition feed, SAM power or the network) fits better than three separate faults. <a href="#/xray">Open the see-through view →</a></p>
+        </Panel>
 
         <Panel title="Component Locations" sub="(real photos of this van)" area="loc">
           <div class="ws-tiles">

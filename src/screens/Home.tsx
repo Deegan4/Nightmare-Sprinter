@@ -33,6 +33,7 @@ export function Home() {
       )}
 
       <a class="item" href="#/sheet" style="margin-top:16px;border-color:#1f3b63;border-width:3px"><span class="brand-mark" style="width:44px;height:44px;flex:none;background:#1f3b63;color:#fff"><Icon name="plan" /></span><span class="grow"><h3>Wiring sheet</h3><span class="small muted">Components, power flow, fuses and all 3 circuits on one page</span></span><Icon name="chev" class="chev" /></a>
+      <a class="item" href="#/xray" style="margin-top:10px;border-color:#0a1220;border-width:3px"><span class="brand-mark" style="width:44px;height:44px;flex:none;background:#0a1220;color:#ffd23f"><Icon name="bolt" /></span><span class="grow"><h3>See-through wiring</h3><span class="small muted">X-ray of the van: where each part is and what connects to it</span></span><Icon name="chev" class="chev" /></a>
       <div class="card" style="margin-top:16px">
         <div class="strip">
           <span><Icon name="check" />{done}/{all.length} steps done</span>

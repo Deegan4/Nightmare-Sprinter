@@ -78,10 +78,10 @@ export function SeatScene() {
       <path class="il-thin" d="M10 238 H390" /><path class="il-fill3" d="M10 238 H390 V252 H10 Z" />
       <circle cx="80" cy="244" r="6" class="il-body" />
       <Pin x={72} y={34} n="C" label="Fuse card legend" />
-      <Pin x={264} y={146} n="5" kind="hot" label="Big fuses, exact spot to confirm" />
+      <Pin x={264} y={146} n="5" kind="hot" label="Fuse blocks 3 and 4 (trailer fuses), outside of seat base per web source" />
       <Pin x={80} y={266} n="6" kind="gnd" label="Ground W71/3" />
       <Leader d="M86 34 H150" /><Label x={150} y={34}>C fuse-card legend: photograph it</Label>
-      <Leader d="M264 132 V112" /><Label x={394} y={100} anchor="end">5 big fuses? confirm spot</Label>
+      <Leader d="M264 132 V112" /><Label x={394} y={100} anchor="end">5 fuse blocks 3 & 4 (web src)</Label>
       <Leader d="M94 266 H130" /><Label x={130} y={266}>6 W71/3 seat-base ground</Label>
       <text x="190" y="134" class="il-text mid sm">BOX UNDER SEAT (lid off)</text>
     </Frame>

@@ -19,6 +19,7 @@ trailer lights all dead). Spec: the PRD in the first PR description / README.
 - `shared/` – types, seed content (from the PRD), rule engine, copy-summary builder. Used by worker and web.
 - `worker/index.ts` – Hono API on Cloudflare Workers, D1 (`records`, `rate`, `blob_chunks`), R2 if bound (photos, reference images, nightly backups); otherwise files go to D1 `blob_chunks`. No auth: anyone with the URL can use it; writes are rate-limited per IP.
 - `src/` – Preact SPA. `lib/` store/sync/IndexedDB, `screens/`, `illus/` (all SVG drawings), `components/`.
+  `illus/xray.tsx` + `screens/Xray.tsx` = see-through view (#/xray): every node cites its source; lines are connections, not routes.
 - `migrations/` – D1 SQL.
 
 ## Data model decision
@@ -26,6 +27,8 @@ Every synced object is one row in `records` (`id, kind, data JSON, created_at, u
 Kinds: vehicle, fact, step, reading, rule, suspect, evidence, fault_code, reference_page, zone, photo, note, event.
 Client-generated ids + last-write-wins on `updated_at` = idempotent retries, no duplicates. `seq` is assigned
 inside the same D1 batch transaction so `/api/sync?since=` never skips rows. `event` rows are append-only.
+`ensureSeeded` inserts missing seed rows and refreshes seed rows nobody edited (updated_at = created_at) when the seed text changes;
+to replace a seed row with a new id, add the old id to `RETIRED_SEED_IDS`.
 
 ## Hard rules (from the PRD — do not break)
 - Never present a guess as fact. Every fact/reading/reference shows a provenance label
@@ -48,7 +51,9 @@ Also used: "Equipment & Instructions.pdf" (battery G1 under driver-footwell floo
 > 12.4 V, SCN coding needs STAR/Xentry, PSM N26/15 in seat frame Fig. 27), "Maintenance.pdf" (horn check: both
 switches), "Wiring Diagrams - Body.pdf" Fig. 6 (turn signal over CAN B to N28/1), "Wiring Diagrams.pdf" Fig. 29
 (compressor A9 pin 1 BU/GN → X26/38 pin 7 → X18/56 pin 23 → S98 pin 5). "Testing & Repair - Body" and
-"Wheels..." had nothing relevant. Seeded fuses/facts cite the figure they came from. `scripts/load-manual-pages.sh` uploads all Library pages.
+"Wheels..." had nothing relevant. Web: Mercedes-Benz Canada "2015 Sprinter Fuse Allocation Supplement" (same W906) gives the locations the
+2012 manuals lack: F59 pre-fuse box in the battery compartment, left footwell; F55/3 and F55/4 in the box on the outside of the driver
+seat base. Its trailer fuse values match. Seeded as SOURCE with "(web source, confirm)". Seeded fuses/facts cite the figure they came from. `scripts/load-manual-pages.sh` uploads all Library pages.
 - Manual PDFs/images are third-party: never commit them (`reference-source/` is git-ignored). The open app does not serve them:
   `/api/ref-image/*` returns 403 unless the deployment sets `SERVE_MANUALS=1` (only for a private deployment).
   Everything sends `noindex`; `robots.txt` disallows all.

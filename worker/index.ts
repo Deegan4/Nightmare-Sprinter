@@ -20,9 +20,15 @@ const MAX_PHOTO = 8 * 1024 * 1024;
 /** Insert any seed records that are missing (new seed content reaches existing installs; edits are never overwritten). */
 async function ensureSeeded(db: D1Database) {
   const seed = seedRecords();
-  const { results } = await db.prepare("SELECT id FROM records WHERE created_by = 'seed'").all<{ id: string }>();
-  const have = new Set(results.map((r) => r.id));
-  await upsert(db, seed.filter((r) => !have.has(r.id)));
+  const { results } = await db.prepare("SELECT id, data, created_at, updated_at, deleted FROM records WHERE created_by = 'seed'").all<{ id: string; data: string; created_at: number; updated_at: number; deleted: number }>();
+  const have = new Map(results.map((r) => [r.id, r]));
+  // Missing seed rows are inserted. Seed rows nobody has edited are refreshed when the seed text changes
+  // (e.g. a newly found source); anything a person edited or deleted is left alone.
+  const changed = seed.filter((r) => {
+    const cur = have.get(r.id);
+    return cur && !cur.deleted && cur.updated_at === cur.created_at && cur.data !== JSON.stringify(r.data);
+  }).map((r) => ({ ...r, created_at: have.get(r.id)!.created_at, updated_at: have.get(r.id)!.created_at }));
+  await upsert(db, [...seed.filter((r) => !have.has(r.id)), ...changed]);
   // Retire seed records that later seed content replaced, unless someone edited them.
   const retired = await db.prepare(
     `SELECT * FROM records WHERE created_by = 'seed' AND deleted = 0 AND id IN (${RETIRED_SEED_IDS.map(() => '?').join(',')})`,

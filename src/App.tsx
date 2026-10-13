@@ -22,7 +22,7 @@ const TABS = [
   { key: 'library', label: 'Library', icon: 'library' },
   { key: 'more', label: 'More', icon: 'more' },
 ];
-const TAB_OF: Record<string, string> = { sheet: 'library', step: 'plan', suspect: 'suspects', ref: 'library', map: 'more', zone: 'more', timeline: 'more', van: 'more', share: 'more', summary: 'more', settings: 'more' };
+const TAB_OF: Record<string, string> = { sheet: 'library', xray: 'more', step: 'plan', suspect: 'suspects', ref: 'library', map: 'more', zone: 'more', timeline: 'more', van: 'more', share: 'more', summary: 'more', settings: 'more' };
 
 function SyncPill() {
   if (status.auth === 'demo') return <span class="sync-pill" title="Demo: saved on this phone only"><span class="dot" style="background:var(--accent)" />Demo</span>;
@@ -62,6 +62,12 @@ function LazySheet() {
   if (!SheetMod) { import('./screens/Sheet').then((m) => { SheetMod = m; set(1); }); return <p class="muted">Loading wiring sheet…</p>; }
   return <SheetMod.WiringSheet />;
 }
+let XrayMod: typeof import('./screens/Xray') | null = null;
+function LazyXray() {
+  const [, set] = useState(0);
+  if (!XrayMod) { import('./screens/Xray').then((m) => { XrayMod = m; set(1); }); return <p class="muted">Loading see-through view…</p>; }
+  return <XrayMod.Xray />;
+}
 
 function Screen({ r }: { r: string[] }) {
   const [a, b] = r;
@@ -83,6 +89,7 @@ function Screen({ r }: { r: string[] }) {
     case 'summary': return <Summary />;
     case 'settings': return <Settings />;
     case 'sheet': return <LazySheet />;
+    case 'xray': return <LazyXray />;
     default: return <Home />;
   }
 }
@@ -97,7 +104,7 @@ export function App() {
   return (
     <>
       <a class="visually-hidden" href="#main">Skip to content</a>
-      <div class={`app${r[0] === 'sheet' ? ' wide' : ''}`}>
+      <div class={`app${r[0] === 'sheet' || r[0] === 'xray' ? ' wide' : ''}`}>
         <header class="topbar">
           <a class="brand" href="#/"><span class="brand-mark"><Icon name="van" /></span>Van Fix</a>
           <span class="spacer" />

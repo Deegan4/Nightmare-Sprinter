@@ -39,6 +39,14 @@ Everything on one page: component locations, power and control flow, fuse tables
 
 <p align="center"><img src="docs/images/wiring-sheet.png" alt="One-page wiring sheet with vehicle overview, power flow, horn, A/C and trailer circuit diagrams" width="100%"></p>
 
+The sheet also has an **ignition feed** panel (EIS N73 → SAM → relays k8 / k6 → f18, f11, f13, from Figs. 39-40) and a **CAN network** panel that overlays the scan's "no CAN message from…" codes on the module map.
+
+### See-through wiring
+
+An x-ray of the van from above. 24 parts (modules, fuse boxes, plugs and grounds) each sit in the area a source names, with seven circuit layers you can switch on and off: battery power, ignition, horn, A/C, trailer, CAN and grounds. Tap a part to see where it is, what it does, what it connects to and which figure says so. Red badges mark modules with scan codes. Lines are connections from the wiring figures, not harness routes, and the cab is drawn wider than life so the parts fit.
+
+<p align="center"><img src="docs/images/xray.png" alt="See-through top view of the van with colour-coded circuit layers connecting the kick-panel SAM, fuse boxes, horn, A/C parts, trailer module and grounds" width="100%"></p>
+
 ## What it does
 
 | | |
@@ -48,6 +56,7 @@ Everything on one page: component locations, power and control flow, fuse tables
 | **Suspects** | SAM, shared grounds, SAM power feed, A/C circuit and CAN network, each with evidence for and against and "what would change my mind". |
 | **Fault codes** | The 2026-10-09 TOPDON scan, editable, with a "write it down before you clear it" guard. |
 | **Library** | 51 manual pages (horn, trailer, A/C, power distribution, grounds, fuse box, battery, connectors) with pinch-zoom on both iOS and Android. Off on the open app (third-party manuals); turn on with `SERVE_MANUALS=1` for a private deployment. |
+| **See-through wiring** | Top-down x-ray of the van with switchable circuit layers and a detail card for every part. |
 | **Photos with markers** | Photograph an area, tap where each part is, and the location becomes CONFIRMED everywhere it's shown. |
 | **Timeline** | Who measured what and when, filterable by person or type. |
 | **Copy summary** | Plain-text summary with every label, ready to paste to Claude or a mechanic. Printable for a shop visit. |
@@ -135,6 +144,6 @@ tests/      unit + two-phone end-to-end acceptance tests
 
 ## A note on the manuals
 
-The wiring and fuse references come from third-party Sprinter 906 workshop manuals the owner already has. They are **not** in this repository, and the open app does not serve them. Drawings in the app are tagged *approximate* or *concept* unless they cite a manual figure, and nothing invents fuse numbers, pinouts or wire colours.
+The wiring and fuse references come from third-party Sprinter 906 workshop manuals the owner already has. They are **not** in this repository, and the open app does not serve them. The F59 and seat-base fuse box locations come from Mercedes' public 2015 Sprinter fuse allocation supplement and are labelled that way. Drawings in the app are tagged *approximate* or *concept* unless they cite a manual figure, and nothing invents fuse numbers, pinouts or wire colours.
 
 <p align="center"><sub>Built for one van and two people. See <a href="CLAUDE.md">CLAUDE.md</a> for the data model and the hard rules.</sub></p>

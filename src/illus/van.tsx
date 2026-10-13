@@ -8,7 +8,7 @@ export const PINS: MapPin[] = [
   { n: '2', label: 'A/C compressor plug (oil found)', zone: 'zone-engine', kind: 'part', side: [118, 192], top: [104, 180] },
   { n: '3', label: 'Ground W9/6 (left front lamp)', zone: 'zone-engine', kind: 'gnd', side: [44, 202], top: [58, 226] },
   { n: '4', label: 'SAM (body-control module)', zone: 'zone-footwell', kind: 'part', side: [173, 220], top: [176, 222] },
-  { n: '5', label: 'Under-seat box & fuse card (big fuses: confirm spot)', zone: 'zone-seat', kind: 'hot', side: [230, 212], top: [236, 196] },
+  { n: '5', label: 'Seat-base fuse box: fuse blocks 3 & 4 (trailer fuses)', zone: 'zone-seat', kind: 'hot', side: [230, 212], top: [236, 196] },
   { n: '6', label: 'Ground W71/3 (seat base)', zone: 'zone-seat', kind: 'gnd', side: [264, 246], top: [264, 240] },
   { n: '7', label: 'Trailer plug', zone: 'zone-rear', kind: 'part', side: [698, 246], top: [704, 150] },
 ];

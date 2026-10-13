@@ -30,7 +30,7 @@ export function PowerFlow() {
       {T(185, 108, 'F59 fuse box', { anchor: 'middle', size: 14 })}
       {T(126, 130, 'F59.5 · 150 A · tml 30', { size: 12, w: 600 })}
       {T(126, 150, 'F59.3 · 80 A · tml 30z', { size: 12, w: 600 })}
-      {T(126, 170, 'location: confirm', { size: 11, w: 600, color: 'var(--p-unknown)' })}
+      {T(126, 170, 'batt. compt, L footwell*', { size: 11, w: 600 })}
       <Tag x={126} y={175} t="SOURCE" />
       {line('M254 128 H282', K.power, 4)}
       <rect x="282" y="40" width="226" height="152" rx="10" fill="var(--il-fill)" stroke="#1f3b63" stroke-width="2.5" stroke-dasharray="7 4" />
@@ -49,9 +49,9 @@ export function PowerFlow() {
       {line('M592 174 V232', K.trailer, 4)}
       {box(520, 232, 130, 54, K.trailer)}{T(585, 252, 'Trailer socket', { anchor: 'middle', size: 12.5, color: K.trailer })}{T(585, 267, 'pin 4: blk 4 f14 20 A', { anchor: 'middle', size: 10.5, w: 600 })}{T(585, 280, 'pin 8 gnd → G304', { anchor: 'middle', size: 10.5, w: 600 })}
       {line('M592 96 V118', K.can, 3, '6 4')}
-      {box(410, 232, 102, 54, K.power, 'var(--il-fill2)')}{T(461, 252, 'Fuse blocks', { anchor: 'middle', size: 12 })}{T(461, 267, '3 & 4', { anchor: 'middle', size: 12 })}{T(461, 281, 'location: confirm', { anchor: 'middle', size: 10, w: 600, color: 'var(--p-unknown)' })}
+      {box(410, 232, 102, 54, K.power, 'var(--il-fill2)')}{T(461, 252, 'Fuse blocks', { anchor: 'middle', size: 12 })}{T(461, 267, '3 & 4', { anchor: 'middle', size: 12 })}{T(461, 281, 'seat base, outside*', { anchor: 'middle', size: 10, w: 600 })}
       {line('M512 259 H520', K.power, 3)}{line('M461 232 V206 H556 V174', K.power, 3)}
-      <Tag x={12} y={222} t="SOURCE" />{T(12, 252, 'SYS Figs. 1, 24, 30, 38-40', { size: 10.5, w: 600 })}{T(12, 266, 'FG K40/9 legend', { size: 10.5, w: 600 })}
+      <Tag x={12} y={222} t="SOURCE" />{T(12, 252, 'SYS Figs. 1, 24, 30, 38-40', { size: 10.5, w: 600 })}{T(12, 266, 'FG K40/9 legend', { size: 10.5, w: 600 })}{T(12, 280, '* MB 2015 fuse supplement (web)', { size: 10, w: 600 })}
     </svg>
   );
 }
@@ -143,6 +143,95 @@ export function TrailerCircuit() {
       {T(14, 262, 'Socket pins (Fig. 24):', { size: 10.5 })}
       {['2 RH turn · 3 reverse', '5 LH tail · 7 brake', '10 LH turn · 8 ground'].map((s, i) => T(14, 277 + i * 13, s, { size: 10, w: 600 }))}
       <Tag x={14} y={322} t="SOURCE" />{T(14, 352, 'SYS Fig. 24 · FG F55/3, F55/4', { size: 10, w: 600 })}
+    </svg>
+  );
+}
+
+const IGN = '#e07b00';
+const fault = (x: number, y: number, s: string) => (
+  <g transform={`translate(${x} ${y})`}><rect width={s.length * 6.1 + 12} height="17" rx="8.5" fill="#d33a2c" />
+    <text x={(s.length * 6.1 + 12) / 2} y="12.5" text-anchor="middle" style="font:800 10px var(--font-body);fill:#fff">{s}</text></g>
+);
+
+/** Ignition feed (terminal 15 / 15R). SYS Fig. 39 (relay wiring), Fig. 40 (ignition switch), FG K40/9 legend (fuse numbers). */
+export function IgnitionCircuit() {
+  return (
+    <svg viewBox="0 0 300 380" role="img" aria-label="Ignition feed: fuses f2 25 A and f3 10 A feed the ignition switch N73; it sends terminal 15R and the ignition signal to the SAM and talks on CAN B; the SAM switches relay k8 (terminal 15) and k6 (terminal 15R); k8 feeds the horn relay k1 and fuse f18 7.5 A; k6 feeds fuses f11 15 A and f13 15 A; the ignition switch grounds at G200">
+      {box(10, 10, 132, 40, K.power, 'var(--il-fill2)')}{T(76, 27, 'f2 25 A · ELV/EZS', { anchor: 'middle', size: 11 })}{T(76, 42, 'f3 10 A · tml 30z', { anchor: 'middle', size: 11 })}
+      {line('M76 50 V70', K.power, 3.5)}
+      {box(10, 70, 132, 62, IGN)}
+      {T(76, 90, 'Ignition switch N73', { anchor: 'middle', size: 12.5 })}{T(76, 105, '(EIS / EZS) · at the key', { anchor: 'middle', size: 10.5, w: 600 })}
+      {fault(36, 111, 'codes 9007 · 9009')}
+      {line('M30 132 V156', K.gnd, 3)}{gnd(30, 166)}{T(44, 166, 'G200', { size: 11 })}{T(44, 179, 'R rear engine', { size: 10, w: 600 })}
+      {line('M142 92 H182', IGN, 3.5)}{T(144, 86, '15R', { size: 9.5, w: 800 })}
+      {line('M142 116 H182', K.can, 3, '7 4')}{T(144, 130, 'CAN', { size: 9.5, w: 800, color: K.can })}
+      <rect x="166" y="60" width="128" height="304" rx="8" fill="none" stroke="#1f3b63" stroke-width="2" stroke-dasharray="6 4" />
+      {T(230, 76, 'K40/9 · L KICK PANEL', { anchor: 'middle', size: 10 })}
+      {box(182, 84, 102, 44, '#121417', '#ffc21a')}{T(233, 102, 'SAM N10', { anchor: 'middle', size: 12, color: '#121417' })}
+      {fault(186, 108, '9091 · 9090')}
+      {line('M206 128 V160', IGN, 2.5)}{T(196, 148, '7/13', { size: 9.5, anchor: 'end' })}
+      {line('M262 128 V160', IGN, 2.5)}{T(268, 148, '14', { size: 9.5 })}
+      <rect x="178" y="160" width="56" height="42" rx="5" fill="var(--il-fill)" stroke={IGN} stroke-width="2.5" />
+      {T(206, 178, 'k8', { anchor: 'middle', size: 13, color: IGN })}{T(206, 193, 'tml 15', { anchor: 'middle', size: 9.5, w: 600 })}
+      <rect x="236" y="160" width="52" height="42" rx="5" fill="var(--il-fill)" stroke={IGN} stroke-width="2.5" />
+      {T(262, 178, 'k6', { anchor: 'middle', size: 13, color: IGN })}{T(262, 193, 'tml 15R', { anchor: 'middle', size: 9.5, w: 600 })}
+      {line('M190 202 V262', IGN, 3)}
+      {box(168, 262, 44, 30, K.horn)}{T(190, 281, 'horn k1', { anchor: 'middle', size: 9.5, color: K.horn })}
+      {line('M216 202 V244', IGN, 3)}
+      <rect x="203" y="244" width="26" height="14" rx="3" fill="var(--il-fill2)" stroke="var(--il-ink)" stroke-width="1.6" />{meterPoint(214, 300, '1')}
+      {T(214, 322, 'f18', { anchor: 'middle', size: 10.5 })}{T(214, 335, '7.5 A', { anchor: 'middle', size: 10, w: 600 })}{line('M216 258 V290', IGN, 2.5)}
+      {line('M262 202 V244', IGN, 3)}
+      <rect x="249" y="244" width="26" height="14" rx="3" fill="var(--il-fill2)" stroke="var(--il-ink)" stroke-width="1.6" />{meterPoint(262, 300, '1')}
+      {line('M262 258 V290', IGN, 2.5)}
+      {T(266, 322, 'f11 · f13', { anchor: 'middle', size: 10.5 })}{T(266, 335, '15 A each', { anchor: 'middle', size: 10, w: 600 })}
+      {T(225, 356, 'key ON → 12 V at both', { anchor: 'middle', size: 10, w: 700 })}
+      {T(10, 214, 'k8 also feeds the', { size: 10.5, w: 600 })}{T(10, 228, 'HORN relay: no T15', { size: 10.5, w: 600 })}{T(10, 242, '= no horn.', { size: 10.5, w: 600 })}
+      <Tag x={10} y={262} t="SOURCE" />{T(10, 292, 'SYS Figs. 39, 40', { size: 10, w: 600 })}{T(10, 306, 'FG K40/9 legend', { size: 10, w: 600 })}
+      <Tag x={10} y={318} t="REPORTED" />{T(10, 348, 'red = codes in the', { size: 10, w: 600 })}{T(10, 361, '2026-10-09 scan', { size: 10, w: 600 })}
+    </svg>
+  );
+}
+
+/** Who talks to whom: the network lists in the manuals, with what the 2026-10-09 scan said about each module. */
+export function CanNetwork() {
+  const mod = (x: number, y: number, w: number, code: string, name: string, n?: string, hot?: boolean) => (
+    <g>
+      <rect x={x} y={y} width={w} height="46" rx="7" fill={hot ? '#fff1ef' : 'var(--il-fill)'} stroke={hot ? '#d33a2c' : 'var(--il-ink)'} stroke-width={hot ? 2.5 : 2} />
+      {T(x + w / 2, y + 19, code, { anchor: 'middle', size: 12.5, color: hot ? '#121417' : undefined })}
+      {T(x + w / 2, y + 35, name, { anchor: 'middle', size: 10, w: 600, color: hot ? '#121417' : undefined })}
+      {n && fault(x + w - 14, y - 9, n)}
+    </g>
+  );
+  const arrow = (d: string) => <path d={d} fill="none" stroke="#d33a2c" stroke-width="2.2" stroke-dasharray="4 3" marker-end="url(#can-ah)" />;
+  return (
+    <svg viewBox="0 0 660 380" role="img" aria-label="CAN network: engine CAN with engine computer, ESP, transmission, selector lever, cluster and ignition switch; interior CAN B with SAM, PSM, trailer module, cluster and ignition switch; second interior CAN with A/C control S98. Red arrows show which modules reported no messages from the ignition switch N73 and from S98.">
+      <defs><marker id="can-ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z" fill="#d33a2c" /></marker></defs>
+      {T(10, 20, 'ENGINE CAN', { size: 12, color: K.can })}
+      {line('M10 98 H650', K.can, 5)}
+      {mod(10, 32, 104, 'CDI', 'engine', '7')}
+      {mod(124, 32, 92, 'N30/4', 'ESP brakes', '3')}
+      {mod(226, 32, 92, 'N15/3', 'TCM trans', '2')}
+      {mod(328, 32, 92, 'N15/5', 'EWM selector', '1')}
+      {[62, 170, 272, 374].map((x) => line(`M${x} 78 V98`, K.can, 3))}
+      {mod(452, 130, 92, 'A1', 'cluster', '1')}
+      {mod(554, 130, 96, 'N73', 'ignition sw.', '2', true)}
+      {line('M498 98 V130', K.can, 3)}{line('M602 98 V130', K.can, 3)}
+      {line('M498 176 V206', K.can, 3)}{line('M602 176 V206', K.can, 3)}
+      {line('M560 176 V292', K.can, 3)}
+      {T(10, 200, 'INTERIOR CAN (CAN B)', { size: 12, color: K.can })}
+      {line('M10 206 H650', K.can, 5, '12 6')}
+      {mod(10, 222, 104, 'N10 SAM', 'kick panel', '8', true)}
+      {mod(124, 222, 92, 'N28/1', 'trailer · rear')}
+      {mod(226, 222, 96, 'N26/15 PSM', 'seat frame')}
+      {[62, 170, 274].map((x) => line(`M${x} 206 V222`, K.can, 3))}
+      {T(340, 236, 'SAM sends turn / brake', { size: 10.5, w: 600 })}{T(340, 250, 'to the trailer module here', { size: 10.5, w: 600 })}
+      {T(560, 284, '2nd INTERIOR CAN', { size: 11, color: K.can, anchor: 'middle' })}
+      {line('M340 292 H650', K.can, 4, '4 4')}
+      {mod(420, 306, 120, 'S98', 'A/C control', undefined, true)}
+      {line('M480 292 V306', K.can, 3)}
+      {arrow('M62 32 Q300 -6 560 128')}{arrow('M170 32 Q380 6 570 128')}{arrow('M272 32 Q420 18 580 128')}{arrow('M374 32 Q470 40 590 128')}
+      {arrow('M290 78 Q340 220 440 304')}{arrow('M40 78 Q200 280 420 318')}
+      {T(10, 368, 'Red arrows = “no CAN message from…” codes (scan 2026-10-09, REPORTED). Red badge = codes stored. Network lists: SOURCE.', { size: 10, w: 600 })}
     </svg>
   );
 }

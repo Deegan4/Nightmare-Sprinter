@@ -42,6 +42,7 @@ const facts: [string, Fact][] = [
   ['fact-src-horn-switches', { text: 'Manual horn check: the horn can be sounded from the steering-wheel contact plate AND from the horn switch on the combination stalk. If both fail, the switches are unlikely to be the cause.', provenance: 'SOURCE', source: 'Maintenance.pdf (AP54.00-D-5451-02A)', tags: ['Horn'] }],
   ['fact-src-trailer-can', { text: 'Manual: turn-signal and brake-lamp commands reach the trailer module (N28/1) over CAN B from the SAM (N10). If CAN B or the SAM is down, trailer lamps fail even with good fuses.', provenance: 'SOURCE', source: 'Wiring Diagrams - Body.pdf Fig. 6, 7', tags: ['Trailer', 'SAM'] }],
   ['fact-src-compressor-wire', { text: 'Manual: compressor A9 pin 1 is a 0.75 mm² blue/green (BU/GN) wire through engine harness connector X26/38 pin 7 and cockpit connector X18/56 pin 23 to A/C control S98 pin 5. Pin 2 goes to a local ground.', provenance: 'SOURCE', source: 'Wiring Diagrams.pdf Fig. 29', tags: ['A/C'] }],
+  ['fact-src-fuse-locations', { text: 'Web source (official Mercedes fuse supplement for the 2015 Sprinter, same W906 body): the main fuse box is in the footwell on the left side; the F59 pre-fuse box is in the battery compartment in that footwell; fuse blocks F55/3 and F55/4 are in the fuse box on the outside of the driver seat base (raise the seat fully, press both latches, lift the cover). Its F55/3 fuse 4 (7.5 A trailer unit) and F55/4 fuses 14 (20 A trailer socket) and 15 (25 A trailer unit) match the 2012 manuals. Different model year: confirm on this van.', provenance: 'SOURCE', source: 'MB Sprinter Fuse Allocation Supplement 2015 (web, mercedes-benz-vans.ca)', tags: ['Fuse/relay box', 'Power distribution', 'Trailer'] }],
   ['fact-prefuse-ohm', { text: '150 A pre-fuse read ≈2.2 Ω, but the meter leads alone read ≈2.1 Ω. This test proves nothing; use voltage drop instead.', provenance: 'CONFIRMED', source: 'Owner measurement', tags: ['Power distribution'] }],
 ];
 
@@ -254,7 +255,11 @@ const codes: [string, FaultCode][] = dtc.map(([module, code, description, status
   module, code, description, status, date_read: '2026-10-09', source: TOPDON, note: '', provenance: 'REPORTED',
 } as FaultCode]);
 /** Seed ids replaced by later seed content; ensureSeeded marks them deleted if nobody edited them. */
-export const RETIRED_SEED_IDS = Array.from({ length: 13 }, (_, i) => `code-${i + 1}`);
+export const RETIRED_SEED_IDS = [
+  ...Array.from({ length: 13 }, (_, i) => `code-${i + 1}`),
+  // Replaced by *-loc versions once the fuse box locations were found (2015 Mercedes fuse supplement).
+  'fuse-f59-5', 'fuse-f59-3', 'fuse-f55-3-4', 'fuse-f55-3-9', 'fuse-f55-4-14', 'fuse-f55-4-15',
+];
 
 const CAVEAT = 'General 906 reference, not matched to this VIN. Verify against the fuse-card and the van.';
 const READ_WIRING = 'Wiring pages show circuits, not physical layout. Follow a line from the power source (top) through fuses and switches to the part, then to its ground (bottom). Labels like W9/6 are ground points; F-numbers are fuses. Check every number against the fuse card before trusting it.';
@@ -291,10 +296,10 @@ const zones: [string, Zone][] = [
   }],
   ['zone-seat', {
     position: 3, key: 'seat', label: 'Under / at the driver’s seat', approximate: true,
-    summary: 'The under-seat box with the fuse-card legend and the seat-base ground W71/3. Where fuse blocks 3 / 4 and the F59 big fuses sit is not stated in the manuals: confirm with photos.',
+    summary: 'The under-seat box with the fuse-card legend and the seat-base ground W71/3. Fuse blocks 3 / 4 (trailer fuses) sit in the box on the outside of the seat base, per the 2015 Mercedes fuse supplement (web). Confirm with photos.',
     parts: ['Under-seat box', 'Fuse-card legend', 'PSM special module N26/15 inside the seat frame (not the SAM) · Equipment manual Fig. 27'],
     ground_points: ['W71/3: seat-base ground (trailer unit, per source)'],
-    fuses: ['F59.5: 150 A, terminal 30 SAM/SRB (location: confirm)', 'F59.3: 80 A, terminal 30z SAM/SRB (location: confirm)'],
+    fuses: ['Fuse block 3, fuse 4: 7.5 A trailer module (seat-base box, web source)', 'Fuse block 4, fuses 14 / 15: 20 A trailer socket / 25 A trailer module (seat-base box, web source)', 'F59 big fuses: battery compartment in the left footwell (web source), not here'],
     step_ids: ['step-1', 'step-3', 'step-4'], ref_tags: ['Fuse/relay box', 'Power distribution', 'Grounds'],
   }],
   ['zone-rear', {
@@ -313,8 +318,8 @@ const zones: [string, Zone][] = [
 const KP = 'Fuse/relay box K40/9 (SRB) · left kick panel';
 const fuseList: [string, string, string, string, string][] = [
   // id, box, number, amps, function + source
-  ['fuse-f59-5', 'F59 fuse box (SAM/SRB feed)', 'F59.5', '150 A', 'Terminal 30 SAM/SRB fuse|FG fuse/relay box legend'],
-  ['fuse-f59-3', 'F59 fuse box (SAM/SRB feed)', 'F59.3', '80 A', 'SAM/SRB terminal 30z|FG fuse/relay box legend'],
+  ['fuse-f59-5-loc', 'F59 pre-fuse box · battery compartment, left footwell (web source, confirm)', 'F59.5', '150 A', 'Terminal 30 SAM/SRB fuse|FG fuse/relay box legend; location: MB 2015 fuse supplement'],
+  ['fuse-f59-3-loc', 'F59 pre-fuse box · battery compartment, left footwell (web source, confirm)', 'F59.3', '80 A', 'SAM/SRB terminal 30z|FG fuse/relay box legend; location: MB 2015 fuse supplement'],
   ['fuse-k40-f1', KP, 'f1 (Fuse 1)', '15 A', 'Signaling horn fuse|FG K40/9 legend; SYS Fig. 30'],
   ['fuse-k40-k1', KP, 'k1 (relay)', 'relay', 'Horn relay|FG K40/9 legend; SYS Fig. 30'],
   ['fuse-k40-k8', KP, 'k8 (relay)', 'relay', 'Terminal 15 relay (feeds the horn relay)|FG K40/9 legend; SYS Fig. 30'],
@@ -324,10 +329,10 @@ const fuseList: [string, string, string, string, string][] = [
   ['fuse-f55-1-2', 'Fuse block 1 (F55/1) · top of fuse/relay box', 'Fuse 2', '10 A', 'Diagnostic socket (scanner port)|FG F55/1 legend; SYS Fig. 39'],
   ['fuse-f55-2-12', 'Fuse block 2 (F55/2) · top of fuse/relay box', 'Fuse 12', '30 A', 'Front blower|FG F55/2 legend; SYS Fig. 39'],
   ['fuse-f55-2-16', 'Fuse block 2 (F55/2) · top of fuse/relay box', 'Fuse 16', '10 A', 'Front climate control (A/C heater control S98)|FG F55/2 legend; SYS Fig. 1'],
-  ['fuse-f55-3-4', 'Fuse block 3 (F55/3) · location: confirm', 'Fuse 4', '7.5 A', 'AAG trailer module, tachograph, ADR (hot at all times)|FG F55/3 legend; SYS Fig. 24'],
-  ['fuse-f55-3-9', 'Fuse block 3 (F55/3) · location: confirm', 'Fuse 9', '15 A', 'Multitone horn / roof fan|FG F55/3 legend'],
-  ['fuse-f55-4-14', 'Fuse block 4 (F55/4) · location: confirm', 'Fuse 14', '20 A', 'Trailer socket (pin 4, hot at all times)|FG F55/4 legend (as of 4/1/07); SYS Figs. 24, 38'],
-  ['fuse-f55-4-15', 'Fuse block 4 (F55/4) · location: confirm', 'Fuse 15', '25 A', 'AAG trailer tow lighting module|FG F55/4 legend (as of 4/1/07); SYS Figs. 24, 38'],
+  ['fuse-f55-3-4-loc', 'Fuse block 3 (F55/3) · outside of driver seat base (web source, confirm)', 'Fuse 4', '7.5 A', 'AAG trailer module, tachograph, ADR (hot at all times)|FG F55/3 legend; SYS Fig. 24; location: MB 2015 fuse supplement'],
+  ['fuse-f55-3-9-loc', 'Fuse block 3 (F55/3) · outside of driver seat base (web source, confirm)', 'Fuse 9', '15 A', 'Multitone horn / roof fan|FG F55/3 legend; location: MB 2015 fuse supplement'],
+  ['fuse-f55-4-14-loc', 'Fuse block 4 (F55/4) · outside of driver seat base (web source, confirm)', 'Fuse 14', '20 A', 'Trailer socket (pin 4, hot at all times)|FG F55/4 legend (as of 4/1/07); SYS Figs. 24, 38; location: MB 2015 fuse supplement'],
+  ['fuse-f55-4-15-loc', 'Fuse block 4 (F55/4) · outside of driver seat base (web source, confirm)', 'Fuse 15', '25 A', 'AAG trailer tow lighting module|FG F55/4 legend (as of 4/1/07); SYS Figs. 24, 38; location: MB 2015 fuse supplement'],
 ];
 const fuses: [string, Fuse][] = fuseList.map(([id, box, number, amps, fs], i) => {
   const [fn, src] = fs.split('|');
