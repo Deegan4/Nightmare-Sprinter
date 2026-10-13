@@ -24,13 +24,16 @@ function markedOn(keys: string[]): { photo: string; zone?: string } | null {
 
 // Locations as printed in the owner's manuals (SOURCE), or "confirm" where they say nothing.
 const COMPONENTS: { name: string; where: string; prov: Provenance; keys: string[]; zone?: string }[] = [
-  { name: 'Battery + F59 fuses (150 A F59.5 · 80 A F59.3)', where: 'confirm on van', prov: 'UNKNOWN', keys: ['battery', 'f59', '150 a', '80 a'] },
+  { name: 'Battery G1', where: 'under the driver-footwell floor · Equipment manual Fig. 2', prov: 'SOURCE', keys: ['battery'], zone: 'zone-footwell' },
+  { name: 'F59 fuses (150 A F59.5 · 80 A F59.3)', where: 'confirm on van', prov: 'UNKNOWN', keys: ['f59', '150 a', '80 a'] },
   { name: 'Fuse/relay box K40/9: SAM N10, horn relay k1, horn fuse f1 15 A', where: 'left kick panel · Fig. 30, 39', prov: 'SOURCE', keys: ['sam', 'kick', 'k40', 'horn relay'], zone: 'zone-footwell' },
   { name: 'Fuse blocks 1 & 2 (F55/1, F55/2)', where: 'top of the fuse/relay box · Fig. 39', prov: 'SOURCE', keys: ['fuse block 1', 'fuse block 2', 'f55/1', 'f55/2'], zone: 'zone-footwell' },
   { name: 'Fuse blocks 3 & 4 (trailer fuses)', where: 'confirm on van', prov: 'UNKNOWN', keys: ['fuse block 3', 'fuse block 4', 'f55/3', 'f55/4'] },
   { name: 'Under-seat box & fuse-card legend', where: 'under driver’s seat', prov: 'REPORTED', keys: ['under-seat', 'fuse card', 'fuse-card'], zone: 'zone-seat' },
+  { name: 'PSM module N26/15 (not the SAM)', where: 'inside driver seat frame · Equipment manual Fig. 27', prov: 'SOURCE', keys: ['psm', 'n26'], zone: 'zone-seat' },
   { name: 'Horn 1 (H1) · ground G104', where: 'engine compartment, left · Fig. 30', prov: 'SOURCE', keys: ['horn 1', 'g104'], zone: 'zone-engine' },
   { name: 'A/C compressor A9 (oil in plug) · pressure sensor B12', where: 'engine compartment · Fig. 1', prov: 'SOURCE', keys: ['compressor', 'b12', 'pressure sensor'], zone: 'zone-engine' },
+  { name: 'Connector X26/38 (compressor wire, pin 7)', where: 'engine harness · Wiring Diagrams Fig. 29', prov: 'SOURCE', keys: ['x26/38'], zone: 'zone-engine' },
   { name: 'A/C heater control S98 · ground G200', where: 'dash; G200 right rear engine compt · Fig. 1', prov: 'SOURCE', keys: ['s98', 'g200'] },
   { name: 'Trailer tow lighting module N28/1 · ground G305', where: 'rear of vehicle · Fig. 24', prov: 'SOURCE', keys: ['trailer module', 'n28', 'g305'], zone: 'zone-rear' },
   { name: 'Trailer socket · pin 8 ground G304', where: 'rear bumper · Fig. 24', prov: 'SOURCE', keys: ['trailer socket', 'socket', 'g304'], zone: 'zone-rear' },
@@ -213,7 +216,7 @@ export function WiringSheet() {
       </div>
 
       <footer class="ws-band ws-foot">
-        Built from your manuals in Google Drive (“System Wiring Diagram.pdf” Figs. 1, 24, 30, 38-40 and “Wiring Diagrams (Fuse Block, Grounds).pdf” US fuse/relay box legend), owner measurements and the 2026-10-09 scan.
+        Built from the 8 Sprinter 906 manuals in your Google Drive (mainly “System Wiring Diagram.pdf” Figs. 1, 24, 30, 38-40, the US fuse/relay box legend, Equipment &amp; Instructions, Wiring Diagrams Fig. 29, Body Fig. 6), owner measurements and the 2026-10-09 scan.
         Manual data is general 906 (SOURCE) until checked on this van. “Confirm” means the manuals don’t say: nothing is guessed.
       </footer>
     </div>

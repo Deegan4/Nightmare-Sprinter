@@ -24,7 +24,7 @@ export function PowerFlow() {
     <svg viewBox="0 0 660 300" role="img" aria-label="Power and control flow from the manual: battery to F59 fuses to the left kick panel fuse/relay box with the SAM, horn relay and fuse blocks 1 and 2; fuse blocks 3 and 4 feed the trailer">
       {box(12, 110, 80, 62)}
       <rect x="26" y="102" width="14" height="9" fill={K.power} stroke="var(--il-ink)" stroke-width="1.5" /><rect x="66" y="102" width="14" height="9" fill="var(--il-ink)" />
-      {T(52, 138, 'Battery', { anchor: 'middle', size: 15 })}{T(52, 156, '14.05 V run', { anchor: 'middle', size: 11, w: 600 })}
+      {T(52, 132, 'Battery G1', { anchor: 'middle', size: 14 })}{T(52, 148, 'under driver', { anchor: 'middle', size: 10.5, w: 600 })}{T(52, 162, 'footwell floor', { anchor: 'middle', size: 10.5, w: 600 })}
       {line('M92 141 H116', K.power, 4)}
       <rect x="116" y="88" width="138" height="106" rx="8" fill="var(--il-fill)" stroke="#1f3b63" stroke-width="2.5" />
       {T(185, 108, 'F59 fuse box', { anchor: 'middle', size: 14 })}
@@ -104,7 +104,10 @@ export function AcCircuit() {
       {T(99, 98, 'A/C heater control S98', { anchor: 'middle', size: 12.5 })}{T(99, 113, 'scan: listed OK', { anchor: 'middle', size: 10.5, w: 600 })}{T(99, 127, 'CAN B to SAM', { anchor: 'middle', size: 10.5, w: 600, color: K.can })}
       <Tag x={190} y={82} t="REPORTED" />
       {line('M184 120 H210 V150', K.gnd, 3)}{gnd(210, 160)}{T(222, 160, 'G200', { size: 11 })}{T(222, 174, 'R rear engine', { size: 10, w: 600 })}
-      {line('M60 134 V222', K.ac, 4)}{T(66, 170, 'pin 5 "compressor', { size: 10.5, w: 600 })}{T(66, 184, 'ctrl vlv" (1 wire)', { size: 10.5, w: 600 })}
+      {line('M60 134 V222', K.ac, 4)}
+      <rect x="46" y="150" width="28" height="12" rx="2" fill="var(--il-fill3)" stroke="var(--il-ink)" stroke-width="1.5" />
+      <rect x="46" y="186" width="28" height="12" rx="2" fill="var(--il-fill3)" stroke="var(--il-ink)" stroke-width="1.5" />
+      {T(80, 146, 'BU/GN 0.75', { size: 10, w: 600 })}{T(80, 161, 'X18/56 pin 23', { size: 10.5 })}{T(80, 196, 'X26/38 pin 7', { size: 10.5 })}{T(80, 209, '← check for oil', { size: 10, w: 600, color: 'var(--fail)' })}
       <circle cx="60" cy="252" r="28" fill="var(--il-fill2)" stroke="var(--il-ink)" stroke-width="2.5" />
       <circle cx="60" cy="252" r="12" fill="var(--il-fill)" stroke="var(--il-ink)" stroke-width="2" />
       <rect x="82" y="258" width="22" height="16" rx="3" fill="var(--il-fill3)" stroke="var(--il-ink)" stroke-width="2" />
@@ -115,7 +118,7 @@ export function AcCircuit() {
       {box(196, 210, 92, 50, K.ac)}{T(242, 228, 'A/C pressure', { anchor: 'middle', size: 11.5 })}{T(242, 243, 'sensor B12', { anchor: 'middle', size: 11.5 })}{T(242, 256, '3 wires', { anchor: 'middle', size: 10, w: 600 })}
       {line('M242 210 V196 H184 V134', K.ac, 2.5, '5 4')}{T(196, 206, 'signal', { size: 10, w: 600 })}
       <Tag x={196} y={268} t="SOURCE" />
-      {T(10, 340, 'SYS Fig. 1 · Do not jump the plug', { size: 10.5, color: 'var(--fail)' })}
+      {T(10, 340, 'SYS Fig. 1 · WD Fig. 29 · never jump the plug', { size: 10.5, color: 'var(--fail)' })}
     </svg>
   );
 }

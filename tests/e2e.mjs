@@ -107,7 +107,7 @@ log('AT7 summary contains facts, readings with unit + condition, suspects, codes
 await K.goto(`${BASE}/#/library`);
 const cards = K.locator('a.item[href^="#/ref/"]');
 const n = await cards.count();
-for (let i = 0; i < n; i++) { const t = await cards.nth(i).innerText(); assert.ok(/Source · unverified/i.test(t) && /\.com/.test(t), `ref ${i} shows provenance + source`); }
+for (let i = 0; i < n; i++) { const t = await cards.nth(i).innerText(); assert.ok(/Source · unverified/i.test(t) && /\.com|\.pdf/.test(t), `ref ${i} shows provenance + source`); }
 log(`AT4 ${n} reference pages show provenance + source`);
 
 // --- AT6: revoke Dad's link

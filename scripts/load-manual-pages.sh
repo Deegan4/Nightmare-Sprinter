@@ -17,3 +17,8 @@ run "$SYS" ref-grounds-a     35 37   # Figs. 25-27 Ground distribution
 run "$SYS" ref-body-control  14 15   # Figs. 10-11 Body computer / special module
 run "$FG"  ref-grounds-b      6 32   # Figs. 1-20 Ground points (location drawings)
 run "$FG"  ref-fuse-box      63 66   # Figs. 37-41 Fuse and relay box
+# Optional extras (other Drive manuals), if present:
+EQ=reference-source/equipment.pdf; WD=reference-source/wiring-diagrams.pdf; BODY=reference-source/body-wiring.pdf
+[ -f "$EQ" ]   && run "$EQ"   ref-battery      3  5   # Figs. 2-3 Battery location
+[ -f "$WD" ]   && run "$WD"   ref-connectors  44 44   # Fig. 29 Engine compartment connectors
+[ -f "$BODY" ] && run "$BODY" ref-turn-signal 18 18   # Fig. 6 Turn signal function

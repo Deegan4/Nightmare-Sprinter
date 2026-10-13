@@ -44,7 +44,11 @@ The owner's manuals are in their Google Drive (shared by gadget.manual@gmail.com
   Fig. 25-27 grounds p.35-37, Fig. 30 horn p.42, Fig. 38-42 power distribution p.54-58.
 - "Wiring Diagrams (Fuse Block, Grounds).pdf" (Mercedes format, 111 pp, has a text layer): fuse/relay box
   K40/9 legend (US version PE54.15-D-2001-97AB), F55/1-7 fuse block legends, ground point legends.
-Seeded fuses/facts cite the figure they came from. `scripts/load-manual-pages.sh` uploads all Library pages.
+Also used: "Equipment & Instructions.pdf" (battery G1 under driver-footwell floor Fig. 2, battery check
+> 12.4 V, SCN coding needs STAR/Xentry, PSM N26/15 in seat frame Fig. 27), "Maintenance.pdf" (horn check: both
+switches), "Wiring Diagrams - Body.pdf" Fig. 6 (turn signal over CAN B to N28/1), "Wiring Diagrams.pdf" Fig. 29
+(compressor A9 pin 1 BU/GN → X26/38 pin 7 → X18/56 pin 23 → S98 pin 5). "Testing & Repair - Body" and
+"Wheels..." had nothing relevant. Seeded fuses/facts cite the figure they came from. `scripts/load-manual-pages.sh` uploads all Library pages.
 - Manual PDFs/images are private: never commit them (`reference-source/` is git-ignored), never serve them publicly.
   Everything sends `noindex`; `robots.txt` disallows all.
 

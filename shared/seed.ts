@@ -34,6 +34,13 @@ const facts: [string, Fact][] = [
   ['fact-src-ac', { text: 'Manual: the A/C heater control (S98) drives the compressor through one "compressor control valve" wire; the A/C pressure sensor reports back to S98. S98 is fed by fuse block 2 fuse 16 (10 A) and grounds at G200 (right rear of engine compartment).', provenance: 'SOURCE', source: 'System Wiring Diagram.pdf Fig. 1', tags: ['A/C'] }],
   ['fact-src-trailer', { text: 'Manual: the trailer tow lighting module is at the REAR of the vehicle, fed by fuse block 4 fuse 15 (25 A) and fuse block 3 fuse 4 (7.5 A), grounded at G305 (lower left side). Socket pin 4 = fuse block 4 fuse 14 (20 A); socket ground pin 8 → G304 (lower left center body).', provenance: 'SOURCE', source: 'System Wiring Diagram.pdf Fig. 24', tags: ['Trailer'] }],
   ['fact-src-horn', { text: 'Manual: horn relay output → fuse 1 (15 A) → Horn 1 (engine compartment) pin B; pin A → ground G104 (left side of engine compartment). The steering control module switches the horn relay when the horn button is pressed.', provenance: 'SOURCE', source: 'System Wiring Diagram.pdf Fig. 30', tags: ['Horn'] }],
+  ['fact-src-battery', { text: 'Manual: battery G1 is under the floor of the DRIVER FOOTWELL. Remove the door sill molding, the floor covering and the cover plate to reach it.', provenance: 'SOURCE', source: 'Equipment & Instructions.pdf Fig. 2 (AR54.10-D-0003SD)', tags: ['Power distribution'] }],
+  ['fact-src-battery-test', { text: 'Manual battery check: switch everything off and wait about 2 minutes for the modules to sleep; a good, charged battery reads above 12.4 V.', provenance: 'SOURCE', source: 'Equipment & Instructions.pdf (AR54.10-D-1129A)', tags: ['Power distribution'] }],
+  ['fact-src-scn', { text: 'Manual: a replacement control unit needs SCN coding with Mercedes STAR Diagnosis / Xentry, with a battery charger keeping voltage up the whole time (low voltage can damage the unit). Then read and, if needed, clear fault memory.', provenance: 'SOURCE', source: 'Equipment & Instructions.pdf (AR54.21-D-0015X)', tags: ['SAM'] }],
+  ['fact-src-psm', { text: 'Manual: the box inside the driver seat frame is the PSM special module (N26/15), not the SAM. The SAM (N10) is in the left kick panel fuse/relay box.', provenance: 'SOURCE', source: 'Equipment & Instructions.pdf Fig. 27; System Wiring Diagram Fig. 30', tags: ['SAM'] }],
+  ['fact-src-horn-switches', { text: 'Manual horn check: the horn can be sounded from the steering-wheel contact plate AND from the horn switch on the combination stalk. If both fail, the switches are unlikely to be the cause.', provenance: 'SOURCE', source: 'Maintenance.pdf (AP54.00-D-5451-02A)', tags: ['Horn'] }],
+  ['fact-src-trailer-can', { text: 'Manual: turn-signal and brake-lamp commands reach the trailer module (N28/1) over CAN B from the SAM (N10). If CAN B or the SAM is down, trailer lamps fail even with good fuses.', provenance: 'SOURCE', source: 'Wiring Diagrams - Body.pdf Fig. 6, 7', tags: ['Trailer', 'SAM'] }],
+  ['fact-src-compressor-wire', { text: 'Manual: compressor A9 pin 1 is a 0.75 mm² blue/green (BU/GN) wire through engine harness connector X26/38 pin 7 and cockpit connector X18/56 pin 23 to A/C control S98 pin 5. Pin 2 goes to a local ground.', provenance: 'SOURCE', source: 'Wiring Diagrams.pdf Fig. 29', tags: ['A/C'] }],
   ['fact-prefuse-ohm', { text: '150 A pre-fuse read ≈2.2 Ω, but the meter leads alone read ≈2.1 Ω. This test proves nothing; use voltage drop instead.', provenance: 'CONFIRMED', source: 'Owner measurement', tags: ['Power distribution'] }],
 ];
 
@@ -74,6 +81,7 @@ const steps: [string, Step][] = [
     position: 2, title: 'Horn: power and ground at the horn plug', short: 'Horn',
     why: 'If 12 V reaches the horn plug when the button is pressed, the SAM and its relay are doing their job and the problem is the horn or its ground. If not, look upstream.',
     how_to: [
+      'Try BOTH horn buttons: the steering-wheel pad and the horn switch on the stalk (manual horn check). Note if either works.',
       'Key ON.',
       'First, in the fuse/relay box in the LEFT KICK PANEL: check horn fuse f1 (15 A) and that horn relay k1 clicks when the horn is pressed (manual Fig. 30).',
       'Unplug Horn 1 in the engine compartment.',
@@ -93,6 +101,7 @@ const steps: [string, Step][] = [
     position: 3, title: 'Big SAM fuses: voltage drop across 150 A and 80 A', short: 'Big fuses',
     why: 'These two fuses feed the SAM/SRB, where the horn relay lives. Ohms on a fuse this big tells you nothing; a voltage drop with current flowing does.',
     how_to: [
+      'Battery check first: everything off for 2 minutes, then battery should read above 12.4 V (manual). The battery is under the driver-footwell floor.',
       'Key ON (more load is better: lights on, blower on).',
       'Put one meter lead on each end of the 150 A fuse (F59.5). Record the volts across it.',
       'Do the same across the 80 A fuse (F59.3).',
@@ -100,6 +109,7 @@ const steps: [string, Step][] = [
     ],
     status: 'todo', requires_photo: false, safety: ['use_voltage_drop', 'verify_before_replace'],
     presets: [
+      { label: 'Battery at rest (2 min, all off)', unit: 'V', condition: 'key_off', hint: 'Manual: above 12.4 V' },
       { label: '150 A fuse (F59.5) drop across', unit: 'V', condition: 'key_on', rule_id: 'rule-fuse-drop', hint: 'One lead each side of the fuse' },
       { label: '80 A fuse (F59.3) drop across', unit: 'V', condition: 'key_on', rule_id: 'rule-fuse-drop', hint: 'One lead each side of the fuse' },
       { label: '150 A fuse: battery side to ground', unit: 'V', condition: 'key_on' },
@@ -134,9 +144,27 @@ const steps: [string, Step][] = [
       'Read all modules. Write down EVERY code (or photograph each screen) before anything else.',
       'Look for CAN B / network faults and read the SAM coding / variant info.',
       'Do NOT clear codes. Do NOT write coding.',
+      'Note: per the manual, coding a replacement SAM is SCN coding with Mercedes STAR Diagnosis / Xentry and a charger connected. A generic scanner may only read it.',
     ],
     status: 'todo', requires_photo: false, safety: ['log_before_clear', 'verify_before_replace'], presets: [],
     suspect_ids: ['sus-can', 'sus-sam'], zone_id: 'zone-footwell', ref_ids: ['ref-body-control'], illustration: 'scan', notes: '',
+  }],
+  ['step-6', {
+    position: 6, title: 'A/C: oil and the compressor control wire', short: 'A/C wire',
+    why: 'Oil was in the compressor plug. The compressor has one control wire from the A/C control (S98). Oil wicking along it, or a break, would stop the compressor even if everything else is fine.',
+    how_to: [
+      'Key OFF. Unplug the compressor (A9) plug and photograph both halves.',
+      'Follow the blue/green (BU/GN) wire from pin 1 to engine harness connector X26/38. Open it and look for oil at pin 7 (manual Fig. 29).',
+      'Continuity, key off, plugs apart: A9 plug pin 1 to X26/38 pin 7, then onward to X18/56 pin 23 if reachable.',
+      'Check fuse block 2, fuse 16 (10 A) that powers the A/C control.',
+      'Do NOT put battery voltage on the compressor plug.',
+    ],
+    status: 'todo', requires_photo: true, safety: ['no_battery_to_compressor'],
+    presets: [
+      { label: 'A9 pin 1 → X26/38 pin 7 continuity', unit: 'Ω', condition: 'key_off', hint: 'Plugs apart, key off' },
+      { label: 'Fuse blk 2 f16 (10 A) drop across', unit: 'V', condition: 'key_on', rule_id: 'rule-fuse-drop', hint: 'A/C on, one lead each side' },
+    ],
+    suspect_ids: ['sus-ac'], zone_id: 'zone-engine', ref_ids: ['ref-ac', 'ref-connectors'], illustration: 'photo', notes: '',
   }],
 ];
 
@@ -189,6 +217,9 @@ const refs: [string, ReferencePage][] = [
   ['ref-grounds-a', { position: 5, title: 'Ground points (wiring set)', figure: 'Figs. 25-27', tags: ['Grounds'], source_name: SRC_A, provenance: 'SOURCE', how_to_read: READ_WIRING + ' Note which parts share each ground point.', caveat: CAVEAT }],
   ['ref-body-control', { position: 6, title: 'Body control (SAM)', figure: 'Figs. 10-11', tags: ['SAM'], source_name: SRC_A, provenance: 'SOURCE', how_to_read: READ_WIRING + ' Shows SAM connections, including CAN B.', caveat: CAVEAT }],
   ['ref-grounds-b', { position: 7, title: 'Ground locations (Mercedes format)', figure: 'Figs. 1-3, 11-13, 15-20', tags: ['Grounds'], source_name: SRC_B, provenance: 'SOURCE', how_to_read: 'These are location drawings: they show WHERE each ground point sits on the body. Match the W-number to the wiring page, then find it here.', caveat: CAVEAT }],
+  ['ref-battery', { position: 9, title: 'Battery location & check', figure: 'Fig. 2-3', tags: ['Power distribution'], source_name: 'Equipment & Instructions.pdf', provenance: 'SOURCE', how_to_read: 'Photos show the driver footwell: remove the door sill (2), floor covering (3) and cover (4) to reach battery G1 and its ground cable (6).', caveat: CAVEAT }],
+  ['ref-connectors', { position: 10, title: 'Engine-bay connectors (compressor wire)', figure: 'Fig. 29', tags: ['A/C'], source_name: 'Wiring Diagrams.pdf', provenance: 'SOURCE', how_to_read: 'Find A9 (compressor) bottom left. Its pin 1 BU/GN wire goes up through X26/38 pin 7 and X18/56 pin 23 to S98 pin 5.', caveat: CAVEAT }],
+  ['ref-turn-signal', { position: 11, title: 'Turn signal function (CAN B to trailer module)', figure: 'Fig. 6', tags: ['Trailer', 'SAM'], source_name: 'Wiring Diagrams - Body.pdf', provenance: 'SOURCE', how_to_read: 'Boxes joined by lines marked B are on interior CAN B: the stalk (N80) and SAM (N10) send turn commands to the trailer module (N28/1).', caveat: CAVEAT }],
   ['ref-fuse-box', { position: 8, title: 'Fuse / relay box', figure: 'Figs. 37-41', tags: ['Fuse/relay box', 'Power distribution'], source_name: SRC_B, provenance: 'SOURCE', how_to_read: 'Fuse box layout drawings. Compare against the photo of your own fuse card; if they differ, the fuse card wins.', caveat: CAVEAT }],
 ];
 
@@ -196,21 +227,21 @@ const zones: [string, Zone][] = [
   ['zone-engine', {
     position: 1, key: 'engine', label: 'Engine bay', approximate: true,
     summary: 'Horn 1 and its plug, the A/C compressor (A9) plug where oil was found, the A/C pressure sensor (B12), and grounds G104 / W9/6 and G200.',
-    parts: ['Horn 1 (H1) and its 2-pin plug: B = feed, A = ground (Fig. 30)', 'A/C compressor (A9) and its control-valve plug', 'A/C pressure sensor (B12)', 'Engine-to-chassis ground strap (replaced)'],
+    parts: ['Horn 1 (H1) and its 2-pin plug: B = feed, A = ground (Fig. 30)', 'A/C compressor (A9) plug: pin 1 BU/GN control wire, pin 2 local ground (Fig. 29)', 'Engine harness connector X26/38: compressor wire on pin 7 (Fig. 29)', 'A/C pressure sensor (B12)', 'Engine-to-chassis ground strap (replaced)'],
     ground_points: ['G104: left side of engine compartment, horn ground (Fig. 30)', 'W9/6: left front lamp unit ground (Mercedes legend)', 'G200: right rear of engine compartment, A/C control ground (Fig. 1)'],
-    fuses: [], step_ids: ['step-2'], ref_tags: ['Horn', 'A/C', 'Grounds'],
+    fuses: [], step_ids: ['step-2', 'step-6'], ref_tags: ['Horn', 'A/C', 'Grounds'],
   }],
   ['zone-footwell', {
     position: 2, key: 'footwell', label: 'Left (driver) footwell', approximate: true,
     summary: 'The left kick panel fuse/relay box (K40/9 SRB): SAM (N10), horn relay k1, horn fuse f1 (15 A), Terminal 15 relay; fuse blocks 1 and 2 on top. Also the scanner port.',
-    parts: ['Fuse/relay box K40/9 (SRB) in the left kick panel', 'SAM N10 (refurbished unit, coding unknown)', 'Horn relay k1', 'Diagnostic socket (fuse block 1, fuse 2, 10 A)'],
+    parts: ['Battery G1: under the footwell floor (door sill molding, floor covering, cover) · Equipment manual Fig. 2', 'Fuse/relay box K40/9 (SRB) in the left kick panel', 'SAM N10 (refurbished unit, coding unknown)', 'Horn relay k1', 'Diagnostic socket (fuse block 1, fuse 2, 10 A)'],
     ground_points: ['Left footwell ground (trailer unit, Mercedes legend)'],
     fuses: ['f1: 15 A signaling horn (K40/9)', 'Fuse block 2, fuse 16: 10 A front climate control (S98)', 'Fuse block 2, fuse 12: 30 A front blower'], step_ids: ['step-2', 'step-5'], ref_tags: ['SAM', 'Grounds', 'Fuse/relay box'],
   }],
   ['zone-seat', {
     position: 3, key: 'seat', label: 'Under / at the driver’s seat', approximate: true,
     summary: 'The under-seat box with the fuse-card legend and the seat-base ground W71/3. Where fuse blocks 3 / 4 and the F59 big fuses sit is not stated in the manuals: confirm with photos.',
-    parts: ['Under-seat box', 'Fuse-card legend'],
+    parts: ['Under-seat box', 'Fuse-card legend', 'PSM special module N26/15 inside the seat frame (not the SAM) · Equipment manual Fig. 27'],
     ground_points: ['W71/3: seat-base ground (trailer unit, per source)'],
     fuses: ['F59.5: 150 A, terminal 30 SAM/SRB (location: confirm)', 'F59.3: 80 A, terminal 30z SAM/SRB (location: confirm)'],
     step_ids: ['step-1', 'step-3', 'step-4'], ref_tags: ['Fuse/relay box', 'Power distribution', 'Grounds'],
