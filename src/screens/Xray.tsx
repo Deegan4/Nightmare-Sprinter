@@ -3,7 +3,7 @@
 import { useState } from 'preact/hooks';
 import type { Photo } from '../../shared/types';
 import { Icon } from '../components/icons';
-import { PageHead, Prov } from '../components/ui';
+import { Chips, PageHead, Prov } from '../components/ui';
 import { LAYERS, LAYER_COLOR, XLINKS, XNODES, XrayVan, type Layer, type XNode } from '../illus/xray';
 import { href } from '../lib/router';
 import { list, useStore } from '../lib/store';
@@ -19,6 +19,7 @@ export function Xray() {
   useStore();
   const [layers, setLayers] = useState<Set<Layer>>(() => new Set(LAYERS.map((l) => l.key)));
   const [sel, setSel] = useState<string | undefined>('k40');
+  const [view, setView] = useState<'top' | 'side'>('top');
   const toggle = (k: Layer) => { const s = new Set(layers); s.has(k) ? s.delete(k) : s.add(k); setLayers(s.size ? s : new Set([k])); };
   const only = (k: Layer) => setLayers(new Set([k]));
   const all = layers.size === LAYERS.length;
@@ -30,10 +31,11 @@ export function Xray() {
   return (
     <div class="anim-in">
       <PageHead title="See-through wiring" back="#/more" kicker="X-ray view">
-        <p class="lede">The van from above with the body see-through. Each part sits in the area the manuals name; lines show <b>what connects to what</b>, not where the harness runs. Tap a part.</p>
+        <p class="lede">The van with the body see-through, from above or from the driver’s side. Each part sits in the area the manuals name; lines show <b>what connects to what</b>, not where the harness runs. Tap a part.</p>
       </PageHead>
 
-      <div class="chips xr-chips" role="group" aria-label="Circuit layers">
+      <Chips label="View" value={view} onChange={setView} options={[{ key: 'top', label: 'From above' }, { key: 'side', label: 'Driver’s side' }]} />
+      <div class="chips xr-chips" role="group" aria-label="Circuit layers" style="margin-top:10px">
         <button type="button" class="chip sm" aria-pressed={all} onClick={() => setLayers(new Set(LAYERS.map((l) => l.key)))}>All</button>
         {LAYERS.map((l) => (
           <button type="button" class="chip sm" aria-pressed={layers.has(l.key) && !all} onClick={() => (all ? only(l.key) : toggle(l.key))}>
@@ -42,7 +44,7 @@ export function Xray() {
         ))}
       </div>
 
-      <div class="xr-wrap" aria-label="See-through view, scrolls sideways"><XrayVan layers={layers} sel={sel} onPick={(id) => setSel(id === sel ? undefined : id)} confirmed={(x) => !!markedPhoto(x)} /></div>
+      <div class="xr-wrap" aria-label="See-through view, scrolls sideways"><XrayVan view={view} layers={layers} sel={sel} onPick={(id) => setSel(id === sel ? undefined : id)} confirmed={(x) => !!markedPhoto(x)} /></div>
 
       <p class="small muted xr-hint">Swipe the drawing sideways to see the rear of the van →</p>
       <div class="legend xr-legend" aria-label="Key">

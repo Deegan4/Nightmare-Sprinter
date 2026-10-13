@@ -19,7 +19,8 @@ trailer lights all dead). Spec: the PRD in the first PR description / README.
 - `shared/` – types, seed content (from the PRD), rule engine, copy-summary builder. Used by worker and web.
 - `worker/index.ts` – Hono API on Cloudflare Workers, D1 (`records`, `rate`, `blob_chunks`), R2 if bound (photos, reference images, nightly backups); otherwise files go to D1 `blob_chunks`. No auth: anyone with the URL can use it; writes are rate-limited per IP.
 - `src/` – Preact SPA. `lib/` store/sync/IndexedDB, `screens/`, `illus/` (all SVG drawings), `components/`.
-  `illus/xray.tsx` + `screens/Xray.tsx` = see-through view (#/xray): every node cites its source; lines are connections, not routes.
+  `illus/xray.tsx` + `screens/Xray.tsx` = see-through view (#/xray), top and driver-side (SIDE heights): every node cites its source;
+  lines/arcs are connections, not routes.
 - `migrations/` – D1 SQL.
 
 ## Data model decision

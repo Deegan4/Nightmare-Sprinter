@@ -43,9 +43,10 @@ The sheet also has an **ignition feed** panel (EIS N73 → SAM → relays k8 / k
 
 ### See-through wiring
 
-An x-ray of the van from above. 24 parts (modules, fuse boxes, plugs and grounds) each sit in the area a source names, with seven circuit layers you can switch on and off: battery power, ignition, horn, A/C, trailer, CAN and grounds. Tap a part to see where it is, what it does, what it connects to and which figure says so. Red badges mark modules with scan codes. Lines are connections from the wiring figures, not harness routes, and the cab is drawn wider than life so the parts fit.
+An x-ray of the van, **from above or from the driver’s side**. 24 parts (modules, fuse boxes, plugs and grounds) each sit in the area a source names, with seven circuit layers you can switch on and off: battery power, ignition, horn, A/C, trailer, CAN and grounds. Tap a part to see where it is, what it does, what it connects to and which figure says so. Red badges mark modules with scan codes. Lines are connections from the wiring figures, not harness routes, and the cab is drawn wider than life so the parts fit.
 
 <p align="center"><img src="docs/images/xray.png" alt="See-through top view of the van with colour-coded circuit layers connecting the kick-panel SAM, fuse boxes, horn, A/C parts, trailer module and grounds" width="100%"></p>
+<p align="center"><img src="docs/images/xray-side.png" alt="See-through driver's side view of the van: battery and F59 fuses under the footwell floor, kick-panel SAM, dash modules, seat-base fuse box and the trailer module at the rear, linked by arcs" width="100%"></p>
 
 ## What it does
 
@@ -56,7 +57,7 @@ An x-ray of the van from above. 24 parts (modules, fuse boxes, plugs and grounds
 | **Suspects** | SAM, shared grounds, SAM power feed, A/C circuit and CAN network, each with evidence for and against and "what would change my mind". |
 | **Fault codes** | The 2026-10-09 TOPDON scan, editable, with a "write it down before you clear it" guard. |
 | **Library** | 51 manual pages (horn, trailer, A/C, power distribution, grounds, fuse box, battery, connectors) with pinch-zoom on both iOS and Android. Off on the open app (third-party manuals); turn on with `SERVE_MANUALS=1` for a private deployment. |
-| **See-through wiring** | Top-down x-ray of the van with switchable circuit layers and a detail card for every part. |
+| **See-through wiring** | X-ray of the van from above or the driver’s side, with switchable circuit layers and a detail card for every part. |
 | **Photos with markers** | Photograph an area, tap where each part is, and the location becomes CONFIRMED everywhere it's shown. |
 | **Timeline** | Who measured what and when, filterable by person or type. |
 | **Copy summary** | Plain-text summary with every label, ready to paste to Claude or a mechanic. Printable for a shop visit. |

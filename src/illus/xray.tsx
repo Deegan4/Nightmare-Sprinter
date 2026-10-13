@@ -131,13 +131,13 @@ const R = (x: number, w: number) => ({ x: X(x), width: X(x + w) - X(x) });
 
 const KIND_R: Record<NodeKind, number> = { module: 15, fuse: 14, part: 13, gnd: 10, plug: 11, battery: 15 };
 
-function Node({ n, on, dim, picked, confirmed, onPick }: { n: XNode; on: boolean; dim: boolean; picked: boolean; confirmed: boolean; onPick: (id: string) => void }) {
+function Node({ n, cx, cy, lab, far, on, dim, picked, confirmed, onPick }: { n: XNode; cx: number; cy: number; lab: 'above' | 'below' | 'left' | 'right'; far?: boolean; on: boolean; dim: boolean; picked: boolean; confirmed: boolean; onPick: (id: string) => void }) {
   const r = KIND_R[n.kind];
   const col = LAYER_COLOR[n.layers[0]];
   const pick = () => onPick(n.id);
   return (
-    <g class={`xr-node${dim ? ' dim' : ''}${picked ? ' picked' : ''}`} transform={`translate(${X(n.x)} ${n.y})`} tabIndex={0} role="button"
-      aria-label={`${n.code} ${n.name}. ${n.where}`} onClick={pick} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick()}>
+    <g class={`xr-node${dim ? ' dim' : ''}${picked ? ' picked' : ''}`} transform={`translate(${cx} ${cy})`} tabIndex={0} role="button"
+      aria-label={`${n.code} ${n.name}. ${n.where}${far ? ' (far side of the van)' : ''}`} opacity={far ? 0.75 : undefined} onClick={pick} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && pick()}>
       <circle r="24" fill="transparent" />
       {n.loc === 'UNKNOWN' && !confirmed && <circle r={r + 8} fill="none" stroke="#9fb3c8" stroke-width="1.5" stroke-dasharray="3 3" />}
       {confirmed && <circle r={r + 6} fill="none" stroke="#2fd27a" stroke-width="3" />}
@@ -157,7 +157,6 @@ function Node({ n, on, dim, picked, confirmed, onPick }: { n: XNode; on: boolean
       )}
       {n.codes && <g transform={`translate(${r - 1} ${-r + 1})`}><circle r="7" fill="#ff5a4e" stroke="#0a1220" stroke-width="2" /><text y="0.5" text-anchor="middle" dominant-baseline="central" style="font:800 9px var(--font-body);fill:#fff">!</text></g>}
       {(() => {
-        const lab = n.lab ?? (n.y > 380 ? 'above' : 'below');
         const [tx, ty, a] = lab === 'above' ? [0, -r - 7, 'middle'] : lab === 'below' ? [0, r + 15, 'middle'] : lab === 'left' ? [-r - 6, 4.5, 'end'] : [r + 6, 4.5, 'start'];
         return <text class="xr-code" x={tx} y={ty} text-anchor={a}>{n.code}</text>;
       })()}
@@ -165,19 +164,83 @@ function Node({ n, on, dim, picked, confirmed, onPick }: { n: XNode; on: boolean
   );
 }
 
+
+// ---------- Driver's side view ----------
+// Same x (length) as the top view; z = height in the side drawing (ground 436, floor ~350, roof 70).
+// Heights follow the source's words (under the floor, kick panel, dash, seat base, bumper); exact heights are a drawing choice.
+// far = the source puts it on the passenger side, so from the driver's side it is behind everything.
+const SIDE: Record<string, { z: number; lab?: 'above' | 'below' | 'left' | 'right'; far?: boolean }> = {
+  g1: { z: 376, lab: 'left' }, f59: { z: 376, lab: 'right' }, k40: { z: 328, lab: 'left' }, diag: { z: 300, lab: 'right' },
+  a1: { z: 200, lab: 'left' }, n73: { z: 240, lab: 'right' }, s98: { z: 278, lab: 'left' }, n80: { z: 250, lab: 'right' }, x1856: { z: 196, lab: 'right' },
+  f55: { z: 340, lab: 'below' }, psm: { z: 302, lab: 'above' }, w713: { z: 356, lab: 'right' },
+  w96: { z: 252, lab: 'right' }, b12: { z: 298, lab: 'right' }, h1: { z: 348, lab: 'right' }, g104: { z: 386, lab: 'right' },
+  cdi: { z: 262, lab: 'right' }, a9: { z: 336, lab: 'right' }, x2638: { z: 300, lab: 'right' }, g200: { z: 246, lab: 'above', far: true },
+  n28: { z: 300, lab: 'left' }, sock: { z: 384, lab: 'left' }, g305: { z: 372, lab: 'above' }, g304: { z: 372, lab: 'above' },
+};
+/** Side-view connection: an arc between two parts. Clearly a link, not a wire route. */
+function sideArc(a: XNode, b: XNode): string {
+  const ax = X(a.x), ay = SIDE[a.id].z, bx = X(b.x), by = SIDE[b.id].z;
+  if (a.id === b.id) return `M${ax} ${ay} q -14 22 -20 30`;
+  const lift = Math.min(110, 14 + Math.abs(bx - ax) / 5);
+  return `M${ax} ${ay} Q${(ax + bx) / 2} ${Math.min(ay, by) - lift} ${bx} ${by}`;
+}
+function SideBody() {
+  return (
+    <>
+      <g style="font:700 11px var(--font-body);letter-spacing:.06em" fill="#7f97b4">
+        <rect {...R(46, 160)} y="226" height="170" rx="18" fill="rgba(77,163,255,.07)" stroke="#2b4467" stroke-dasharray="6 5" />
+        <text x={X(58)} y="216">ENGINE COMPARTMENT</text>
+        <rect {...R(206, 124)} y="300" height="96" rx="12" fill="rgba(255,90,78,.07)" stroke="#5a2f3a" stroke-dasharray="6 5" />
+        <text x={X(212)} y="456" fill="#c98b93">▲ LEFT FOOTWELL / KICK PANEL</text>
+        <rect {...R(206, 90)} y="190" height="104" rx="12" fill="rgba(255,159,28,.05)" stroke="#5a4a2a" stroke-dasharray="6 5" />
+        <text x={X(212)} y="182" fill="#d1a565">DASH</text>
+        <rect {...R(336, 96)} y="286" height="110" rx="12" fill="rgba(196,139,255,.07)" stroke="#4a3866" stroke-dasharray="6 5" />
+        <text x={X(400)} y="456" fill="#b49ad8">▲ DRIVER SEAT</text>
+        <rect {...R(830, 124)} y="270" height="134" rx="12" fill="rgba(196,139,255,.07)" stroke="#4a3866" stroke-dasharray="6 5" />
+        <text x={X(842)} y="262" fill="#b49ad8">REAR</text>
+      </g>
+      <g fill="none" stroke="#5f7fa8" stroke-width="2.4" stroke-linejoin="round">
+        <path d={P('M48 392 L44 300 Q46 262 72 252 L184 234 Q198 230 206 216 L262 92 Q268 72 292 72 L938 70 Q956 70 956 88 L956 392 Z')} fill="rgba(95,127,168,.06)" />
+        <path d={P('M212 214 L264 96 L330 96 L330 214 Z')} fill="rgba(120,160,210,.08)" opacity=".8" />
+        <path d={P('M444 76 V392')} stroke-width="1.5" opacity=".5" stroke-dasharray="8 6" />
+        <path d={P('M206 350 H956')} stroke-width="1.6" opacity=".55" stroke-dasharray="3 6" />
+        <path d={P('M206 222 H300 M206 222 L206 392')} stroke-width="1.6" opacity=".55" />
+        <path d={P('M340 300 H424 V334 H340 Z M412 300 L430 196')} opacity=".5" />
+        <path d={P('M292 262 L270 222')} stroke-width="4" opacity=".35" />
+        <path d={P('M500 120 H930 V330 H500 Z')} opacity=".18" />
+        <path d={P('M44 300 H80 M948 360 H962')} stroke-width="3" />
+      </g>
+      <g>
+        {[154, 752].map((cx) => (<g><circle cx={X(cx)} cy="398" r="40" fill="#1a2a42" stroke="#5f7fa8" stroke-width="2.4" /><circle cx={X(cx)} cy="398" r="15" fill="none" stroke="#5f7fa8" stroke-width="2" /></g>))}
+        <path d="M0 438 H1000" stroke="#2b4467" stroke-width="2" />
+      </g>
+      <g style="font:700 12px var(--font-body);letter-spacing:.08em" fill="#7f97b4">
+        <text x={X(48)} y="36">◄ FRONT</text>
+        <text x={X(952)} y="36" text-anchor="end">REAR ►</text>
+        <text x={X(700)} y="56" text-anchor="middle">DRIVER’S SIDE · SEEN FROM OUTSIDE, BODY SEE-THROUGH</text>
+        <text x={X(700)} y="230" text-anchor="middle" opacity=".55">CARGO AREA</text>
+        <text x={X(948)} y="344" text-anchor="end" opacity=".6" style="font-size:10px">floor</text>
+      </g>
+    </>
+  );
+}
+
 /** The see-through van. `layers` = layers to show; `sel` = picked node id. */
-export function XrayVan({ layers, sel, onPick, confirmed }: { layers: Set<Layer>; sel?: string; onPick: (id: string) => void; confirmed: (n: XNode) => boolean }) {
+export function XrayVan({ layers, sel, onPick, confirmed, view = 'top' }: { layers: Set<Layer>; sel?: string; onPick: (id: string) => void; confirmed: (n: XNode) => boolean; view?: 'top' | 'side' }) {
+  const side = view === 'side';
+  const byId = (id: string) => XNODES.find((n) => n.id === id)!;
   const linked = new Set<string>();
   if (sel) for (const l of XLINKS) if ((l.from === sel || l.to === sel) && layers.has(l.layer)) { linked.add(l.from); linked.add(l.to); }
   const nodeOn = (n: XNode) => n.layers.some((l) => layers.has(l));
   return (
-    <svg class="xr-svg" viewBox="0 0 1000 470" role="img" aria-label="See-through view of the Sprinter from above with its wiring connections. Front on the left, driver's side at the bottom.">
+    <svg class="xr-svg" viewBox="0 0 1000 470" role="img" aria-label={side ? "See-through view of the Sprinter from the driver's side with its wiring connections. Front on the left." : "See-through view of the Sprinter from above with its wiring connections. Front on the left, driver's side at the bottom."}>
       <defs>
         <pattern id="xr-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#16263d" stroke-width="1" /></pattern>
         <filter id="xr-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
       </defs>
       <rect width="1000" height="470" fill="#0a1220" />
       <rect width="1000" height="470" fill="url(#xr-grid)" />
+      {side ? <SideBody /> : <>
       {/* areas named by the sources */}
       <g style="font:700 11px var(--font-body);letter-spacing:.06em" fill="#7f97b4">
         <rect {...R(46, 160)} y="76" height="336" rx="18" fill="rgba(77,163,255,.07)" stroke="#2b4467" stroke-dasharray="6 5" />
@@ -211,20 +274,22 @@ export function XrayVan({ layers, sel, onPick, confirmed }: { layers: Set<Layer>
         <text x={X(690)} y="240" text-anchor="middle" opacity=".55">CARGO AREA</text>
         <text x={X(952)} y="36" text-anchor="end">REAR ►</text>
       </g>
+      </>}
       {/* connections */}
       <g fill="none" stroke-linecap="round" stroke-linejoin="round">
         {XLINKS.filter((l) => layers.has(l.layer)).map((l) => {
           const hot = !sel || l.from === sel || l.to === sel;
-          return <path d={P(linkPath(l))} stroke={LAYER_COLOR[l.layer]} stroke-width={hot && sel ? 4.5 : 3} stroke-dasharray={l.dashed ? '9 6' : undefined}
+          return <path d={side ? sideArc(byId(l.from), byId(l.to)) : P(linkPath(l))} stroke={LAYER_COLOR[l.layer]} stroke-width={hot && sel ? 4.5 : 3} stroke-dasharray={l.dashed ? '9 6' : undefined}
             opacity={hot ? 0.95 : 0.14} filter={hot ? 'url(#xr-glow)' : undefined} />;
         })}
       </g>
       {XNODES.map((n) => {
         const on = nodeOn(n);
         const dim = !on || (!!sel && sel !== n.id && !linked.has(n.id));
-        return <Node n={n} on={on} dim={dim} picked={sel === n.id} confirmed={confirmed(n)} onPick={onPick} />;
+        const sv = SIDE[n.id];
+        return <Node n={n} cx={X(n.x)} cy={side ? sv.z : n.y} lab={side ? sv.lab ?? 'below' : n.lab ?? (n.y > 380 ? 'above' : 'below')} far={side && sv.far} on={on} dim={dim} picked={sel === n.id} confirmed={confirmed(n)} onPick={onPick} />;
       })}
-      <text x="992" y="466" text-anchor="end" style="font:600 10.5px var(--font-body)" fill="#7f97b4">Not to scale (cab drawn wider) · lines = connections from the wiring figures, not harness routes</text>
+      <text x="992" y="466" text-anchor="end" style="font:600 10.5px var(--font-body)" fill="#7f97b4">{side ? 'Not to scale · heights follow the source wording · arcs = connections, not harness routes' : 'Not to scale (cab drawn wider) · lines = connections from the wiring figures, not harness routes'}</text>
     </svg>
   );
 }
