@@ -1,4 +1,4 @@
-name = "van-fix"
+name = "nightmare-sprinter"
 main = "worker/index.ts"
 compatibility_date = "2025-09-01"
 
@@ -8,17 +8,20 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = ["/api/*"]
 
+# D1 "van-fix" in the Cloudflare account that hosts the app (account ab236849…).
 [[d1_databases]]
 binding = "DB"
 database_name = "van-fix"
-database_id = "ed245535-d8d3-4cd3-853a-02e33f6f9338"
+database_id = "100e8615-099f-4835-b271-0d9db8be9188"
 migrations_dir = "migrations"
 
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "van-fix"
+# No R2 bucket: photos, manual pages and backups are stored in D1 (blob_chunks).
+# To use R2 instead, create a bucket in this account and add:
+# [[r2_buckets]]
+# binding = "BUCKET"
+# bucket_name = "van-fix"
 
 [triggers]
-crons = ["17 9 * * *"] # nightly JSON backup to R2 (09:17 UTC)
+crons = ["17 9 * * *"] # nightly JSON backup (09:17 UTC)
 
 # Optional var: SERVE_MANUALS = "1" serves manual page images (only for a private deployment).
