@@ -66,8 +66,8 @@ export const W_POINTS: GroundPoint[] = [
 
 /** Where the two manuals list the same parts, so they are PROBABLY the same bolt. Not confirmed. */
 export const LIKELY_SAME: [string, string, string][] = [
-  ['G103 / G302', 'W43/1', 'Both carry the SAM (N10): "left rear of engine compt" vs "left firewall"'],
-  ['G104', 'W9/6, W9/7', 'Both carry Horn 1 (H1): "left side of engine compt" vs "left front lamp unit / left front"'],
+  ['G302', 'W43/1', 'Strong match: both list the SAM, clutch pedal switch, parking brake switch, passenger-side mirror, side window/curtain bag and passenger entry lamp. "Left rear of engine compt" vs "left firewall" (on the Mercedes "left footwell" page)'],
+  ['G103 / G104', 'W9/6, W9/7', 'Same parts (horn, wiper motor, left lamp unit, engine computer, washer pumps, fuse/relay box), but the wording differs: "left rear / left side of engine compt" vs "left front lamp unit / left front". Confirm on the van'],
   ['G200', 'W1/3, W1/4', 'Both carry the ignition switch, A/C control, cluster and steering module: "right rear of engine compt" vs "cockpit"'],
   ['G301 / G305', 'W71/1, W71/2, W71/3', 'Both carry the trailer module, transmission computer, dynamics sensor, tire-pressure and PSM: "lower left side of vehicle" vs "driver seat frame"'],
 ];
