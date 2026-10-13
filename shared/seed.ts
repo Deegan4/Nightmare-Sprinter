@@ -55,7 +55,7 @@ const facts: [string, Fact][] = [
   ['fact-g302-w43', { text: 'G302 (the SAM\'s second ground) is probably the same bolt as the Mercedes "left firewall ground point" W43/1, which Mercedes lists under the LEFT FOOTWELL: both manuals list the same parts on it (SAM, clutch pedal switch, parking brake switch, passenger-side mirror, side airbag, passenger entry lamp). Look on the driver-side firewall, footwell side first, near the kick-panel fuse/relay box. Confirm by finding brown wires going into the SAM connector.', provenance: 'HYPOTHESIS', source: 'Comparison of System Wiring Diagram Fig. 26 and Fuse Block, Grounds manual PE54.00-D-2000AG', tags: ['Grounds', 'SAM'] }],
   ['fact-scan-2', { text: 'TOPDON scan 2026-10-13 17:07 (same scanner SN 988311103781, V10.50): 13 fault codes in 5 of 16 modules: SRS 1, engine (CDI) 4, ESP 1, instrument cluster 1, SAM 6. No fault: TPMS, MRM steering column, AdBlue, radio, EIS ignition switch, TCM, A/C, upper control panel, PTC heater, EWM selector, driver door.', provenance: 'REPORTED', source: 'TOPDON online report 2026-10-13: https://online-report.topdoninfo.com/Home/Topdon/topdonReportDetail/diagnose_record_id/85506ec2ge54OMOMKwDhtZtZOM/report_type/TC/l/en-us', tags: [] }],
   ['fact-scan-compare', { text: 'Compared with 2026-10-09: GONE on 10-13: EIS 9007 / 9009 (terminal 15 / 15R short or open), SAM 9091 / 9090 (terminal 15 / 15R CAN signal implausible), all the "no CAN message from N73 / S98" codes (engine 104000, 105B00, 10BC00; ESP 475C, 5401; TCM C164, C141; EWM 0005) and ESP 4804 (coding string invalid). STILL THERE: SAM 90B5 "control unit is faulty", SAM 9042, 9001, 909F, 9004, 901C (all current), cluster 9100 (engine CAN, stored), engine 100B00, 155C00, 161700, 161800. NEW: ESP 43C0 "N30/4 voltage supply too low" (current) and SRS 9013 "S68/1 driver seat belt buckle switch open circuit" (current).', provenance: 'REPORTED', source: 'TOPDON reports 2026-10-09 and 2026-10-13', tags: ['SAM', 'Network'] }],
-  ['fact-codes-cleared', { text: 'Were fault codes cleared between the 10-09 and 10-13 scans (by anyone, with any tool), or the battery disconnected? If NOT, the ignition-switch and network codes went away on their own and the 10-09 lead is weaker. If they WERE cleared, those codes did not come back by 10-13.', provenance: 'UNKNOWN', source: '', tags: ['Network'] }],
+  ['fact-codes-cleared-yes', { text: 'Fault codes WERE cleared between the 10-09 and 10-13 scans (the 10-09 codes had been written down first). So every code on the 10-13 scan came back after clearing; the ignition-switch (9007/9009), SAM terminal 15/15R (9091/9090) and "no CAN message" codes did NOT come back by 10-13. How many key cycles / how much driving happened between clearing and the 10-13 scan: not recorded.', provenance: 'CONFIRMED', source: 'Owner (chat, 2026-10-13)', tags: ['Network', 'SAM'] }],
   ['fact-prefuse-ohm', { text: '150 A pre-fuse read ≈2.2 Ω, but the meter leads alone read ≈2.1 Ω. This test proves nothing; use voltage drop instead.', provenance: 'CONFIRMED', source: 'Owner measurement', tags: ['Power distribution'] }],
 ];
 
@@ -225,12 +225,12 @@ const suspects: [string, Suspect][] = [
   }],
   ['sus-t15', {
     position: 0, title: 'Ignition feed (EIS N73 / Terminal 15 & 15R)', short: 'Ignition', state: 'untested', provenance: 'HYPOTHESIS',
-    summary: 'The 10-09 scan showed the ignition switch storing Terminal 15 and 15R short/open faults (9007, 9009), four other modules missing its CAN messages, and the SAM calling its terminal 15/15R signals implausible. On the 10-13 scan ALL of those are gone and the ignition switch reports no fault: unless codes were cleared in between, this lead is weaker. The horn relay k1 is fed through the Terminal 15 relay k8 (manual Fig. 30), so the f18 / f11 key-on check is still worth 2 minutes.',
+    summary: 'The 10-09 scan showed the ignition switch storing Terminal 15 and 15R short/open faults (9007, 9009), four other modules missing its CAN messages, and the SAM calling its terminal 15/15R signals implausible. Codes were cleared before the 10-13 scan, and NONE of those came back: the ignition switch reports no fault. This lead is weaker; something one-off (for example low battery voltage) may have set them. The horn relay k1 is fed through the Terminal 15 relay k8 (manual Fig. 30), so the f18 / f11 key-on check is still worth 2 minutes.',
     change_my_mind: 'Terminal 15 and 15R fuses read battery voltage with key on, relays k8/k6 switch, and EIS 9007/9009 do not come back after a key cycle.', symptom_links: ['horn', 'ac', 'trailer'],
   }],
   ['sus-can', {
     position: 5, title: 'Network (CAN B / engine CAN)', short: 'Network', state: 'untested', provenance: 'HYPOTHESIS',
-    summary: '10-09: cluster 9100 (engine CAN) plus ESP/TCM/engine/EWM "no CAN message" codes. 10-13: only cluster 9100 remains, as stored; the "no CAN message" codes are gone.',
+    summary: '10-09: cluster 9100 (engine CAN) plus ESP/TCM/engine/EWM "no CAN message" codes. Codes were cleared before 10-13, and cluster 9100 (engine CAN bus fault) came BACK as stored, so a network fault happened again after clearing; the "no CAN message" codes did not come back.',
     change_my_mind: 'A read-only scan shows no current CAN / network faults.', symptom_links: ['horn', 'ac', 'trailer'],
   }],
 ];
@@ -291,6 +291,7 @@ const codes2: [string, FaultCode][] = dtc2.map(([module, code, description, stat
 export const RETIRED_SEED_IDS = [
   ...Array.from({ length: 13 }, (_, i) => `code-${i + 1}`),
   // Replaced by *-loc versions once the fuse box locations were found (2015 Mercedes fuse supplement).
+  'fact-codes-cleared',
   'fuse-f59-5', 'fuse-f59-3', 'fuse-f55-3-4', 'fuse-f55-3-9', 'fuse-f55-4-14', 'fuse-f55-4-15',
 ];
 
