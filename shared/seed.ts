@@ -27,7 +27,8 @@ const facts: [string, Fact][] = [
   ['fact-sam-coding', { text: 'Whether the used SAM is coded to this VIN.', provenance: 'UNKNOWN', source: '', tags: ['SAM'] }],
   ['fact-sam-label', { text: 'SAM label: part A 906 900 47 00, hardware A 906 901 15 00, firmware A 906 902 75 00, ZGS 001, manufacturer Temic.', provenance: 'CONFIRMED', source: 'SAM label', tags: ['SAM'] }],
   ['fact-sam-volts', { text: 'Scanner shows SAM module voltage 13.10 V.', provenance: 'REPORTED', source: 'TOPDON scan', tags: ['SAM'] }],
-  ['fact-scan', { text: 'TOPDON scanner (exact model unknown), report dated 2026-10-09 with 23 faults.', provenance: 'REPORTED', source: 'TOPDON report 2026-10-09', tags: [] }],
+  ['fact-scan', { text: 'TOPDON scan 2026-10-09 (scanner SN 988311103781, software V10.50): 24 fault codes in 7 of 16 modules. No fault: SRS, TPMS, MRM steering column, AdBlue, radio, A/C, upper control panel, PTC heater, driver door.', provenance: 'REPORTED', source: 'TOPDON online report 2026-10-09: https://online-report.topdoninfo.com/Home/Topdon/topdonReportDetail/diagnose_record_id/868fee14ge54OM54KwoGOMoGlp/report_type/TC/l/en-us', tags: [] }],
+  ['fact-scan-pattern', { text: 'Scan pattern: the ignition switch (EIS N73) stores 9007 "Terminal 15 short/open" and 9009 "Terminal 15R short/open"; engine, ESP, TCM and selector lever all log missing CAN messages from the EIS; the SAM logs "CAN signal terminal 15 / 15R implausible" (9091, 9090). Engine and TCM also miss CAN messages from the A/C control unit S98 (KLA), though the A/C module itself reports no fault.', provenance: 'REPORTED', source: 'TOPDON report 2026-10-09', tags: ['SAM', 'A/C'] }],
   ['fact-timeline', { text: 'Horn, A/C and trailer lights all stopped BEFORE the SAM was replaced.', provenance: 'CONFIRMED', source: 'Owner', tags: ['SAM', 'Horn', 'A/C', 'Trailer'] }],
   ['fact-oil', { text: 'Oil found inside the lower electrical connector that plugs into the A/C compressor.', provenance: 'CONFIRMED', source: 'Owner inspection', tags: ['A/C'] }],
   ['fact-src-kickpanel', { text: 'Manual: the fuse/relay block with the body control module (SAM), horn relay and horn fuse 1 (15 A) is in the LEFT KICK PANEL (driver footwell). Fuse blocks 1 and 2 sit on top of it.', provenance: 'SOURCE', source: 'System Wiring Diagram.pdf Figs. 30, 39', tags: ['SAM', 'Horn', 'Fuse/relay box'] }],
@@ -77,8 +78,27 @@ const steps: [string, Step][] = [
     status: 'todo', requires_photo: true, safety: [], presets: [], suspect_ids: ['sus-power'], zone_id: 'zone-seat',
     ref_ids: ['ref-fuse-box'], illustration: 'photo', notes: '',
   }],
+  ['step-7', {
+    position: 2, title: 'Ignition feed: Terminal 15 / 15R fuses and relays', short: 'Ignition',
+    why: 'The scan points at the ignition switch: it stores "Terminal 15 / 15R short or open" and four modules lost its CAN messages. The horn relay is fed through the Terminal 15 relay (manual Fig. 30), so this one check could explain more than one dead system.',
+    how_to: [
+      'In the fuse/relay box in the LEFT KICK PANEL (K40/9), find: f18 Terminal 15 fuse (7.5 A), f11 Terminal 15R fuse (15 A), relay k8 (Terminal 15) and relay k6 (Terminal 15R). Labels per the fuse/relay box legend; check them against the fuse card.',
+      'Key OFF: black lead on a clean ground, red lead on each side of f18 and f11. Note the volts.',
+      'Key ON: measure the same points again. Battery voltage should now be present.',
+      'Have a helper turn the key on and off while you feel or listen for k8 and k6 switching.',
+      'Afterwards, run a read-only scan: note whether EIS 9007 / 9009 come back as current. Do not clear codes.',
+    ],
+    status: 'todo', requires_photo: false, safety: ['log_before_clear'],
+    presets: [
+      { label: 'Tml 15 fuse f18 (7.5 A), key ON', unit: 'V', condition: 'key_on', rule_id: 'rule-feed-12v', hint: 'Red on the fuse, black on ground' },
+      { label: 'Tml 15R fuse f11 (15 A), key ON', unit: 'V', condition: 'key_on', rule_id: 'rule-feed-12v', hint: 'Red on the fuse, black on ground' },
+      { label: 'Tml 15 fuse f18, key OFF', unit: 'V', condition: 'key_off', hint: 'Expect near 0 V' },
+      { label: 'Tml 15R fuse f11, key OFF', unit: 'V', condition: 'key_off', hint: 'Expect near 0 V' },
+    ],
+    suspect_ids: ['sus-t15', 'sus-sam'], zone_id: 'zone-footwell', ref_ids: ['ref-power', 'ref-fuse-box', 'ref-horn'], illustration: 'fuse-drop', notes: '',
+  }],
   ['step-2', {
-    position: 2, title: 'Horn: power and ground at the horn plug', short: 'Horn',
+    position: 3, title: 'Horn: power and ground at the horn plug', short: 'Horn',
     why: 'If 12 V reaches the horn plug when the button is pressed, the SAM and its relay are doing their job and the problem is the horn or its ground. If not, look upstream.',
     how_to: [
       'Try BOTH horn buttons: the steering-wheel pad and the horn switch on the stalk (manual horn check). Note if either works.',
@@ -95,10 +115,10 @@ const steps: [string, Step][] = [
       { label: 'Horn plug power (horn pressed)', unit: 'V', condition: 'load', rule_id: 'rule-feed-12v', hint: 'Red on plug pin B, black on ground' },
       { label: 'Horn ground voltage drop', unit: 'V', condition: 'load', rule_id: 'rule-ground-drop', hint: 'Red on horn ground, black on battery −' },
     ],
-    suspect_ids: ['sus-sam', 'sus-grounds', 'sus-power'], zone_id: 'zone-engine', ref_ids: ['ref-horn', 'ref-grounds-a'], illustration: 'horn', notes: '',
+    suspect_ids: ['sus-t15', 'sus-sam', 'sus-grounds', 'sus-power'], zone_id: 'zone-engine', ref_ids: ['ref-horn', 'ref-grounds-a'], illustration: 'horn', notes: '',
   }],
   ['step-3', {
-    position: 3, title: 'Big SAM fuses: voltage drop across 150 A and 80 A', short: 'Big fuses',
+    position: 4, title: 'Big SAM fuses: voltage drop across 150 A and 80 A', short: 'Big fuses',
     why: 'These two fuses feed the SAM/SRB, where the horn relay lives. Ohms on a fuse this big tells you nothing; a voltage drop with current flowing does.',
     how_to: [
       'Battery check first: everything off for 2 minutes, then battery should read above 12.4 V (manual). The battery is under the driver-footwell floor.',
@@ -120,7 +140,7 @@ const steps: [string, Step][] = [
     suspect_ids: ['sus-power', 'sus-sam'], zone_id: 'zone-seat', ref_ids: ['ref-power', 'ref-fuse-box'], illustration: 'fuse-drop', notes: '',
   }],
   ['step-4', {
-    position: 4, title: 'Trailer plug: constant 12 V, then seat-base ground', short: 'Trailer',
+    position: 5, title: 'Trailer plug: constant 12 V, then seat-base ground', short: 'Trailer',
     why: 'The trailer unit needs a constant feed and a good ground. Its ground point at the seat base (W71/3) is shared, so a bad one could hit more than the trailer.',
     how_to: [
       'At the trailer socket on the rear bumper, find terminal 4 (numbers are molded on the socket face). Per Fig. 24 it is fed by fuse block 4, fuse 14 (20 A), hot at all times.',
@@ -137,7 +157,7 @@ const steps: [string, Step][] = [
     suspect_ids: ['sus-grounds', 'sus-can'], zone_id: 'zone-rear', ref_ids: ['ref-trailer', 'ref-grounds-a', 'ref-grounds-b'], illustration: 'trailer', notes: '',
   }],
   ['step-5', {
-    position: 5, title: 'Scan, read only: network faults & SAM coding', short: 'Scan',
+    position: 6, title: 'Scan, read only: network faults & SAM coding', short: 'Scan',
     why: 'CAN B links the SAM, A/C module and trailer unit. Network faults plus an uncoded used SAM would explain three systems failing together. Reading is safe; writing is not.',
     how_to: [
       'Plug in the scanner, key ON.',
@@ -150,7 +170,7 @@ const steps: [string, Step][] = [
     suspect_ids: ['sus-can', 'sus-sam'], zone_id: 'zone-footwell', ref_ids: ['ref-body-control'], illustration: 'scan', notes: '',
   }],
   ['step-6', {
-    position: 6, title: 'A/C: oil and the compressor control wire', short: 'A/C wire',
+    position: 7, title: 'A/C: oil and the compressor control wire', short: 'A/C wire',
     why: 'Oil was in the compressor plug. The compressor has one control wire from the A/C control (S98). Oil wicking along it, or a break, would stop the compressor even if everything else is fine.',
     how_to: [
       'Key OFF. Unplug the compressor (A9) plug and photograph both halves.',
@@ -189,6 +209,11 @@ const suspects: [string, Suspect][] = [
     summary: 'Oil was found in the compressor plug. Manual Fig. 1 shows the compressor is driven by a single "compressor control valve" wire from the A/C heater control (S98), not a clutch relay, and S98 reads the A/C pressure sensor. S98 is fed by fuse block 2 fuse 16 (10 A).',
     change_my_mind: 'Compressor type confirmed and its control signal is present at a clean, dry plug.', symptom_links: ['ac'],
   }],
+  ['sus-t15', {
+    position: 0, title: 'Ignition feed (EIS N73 / Terminal 15 & 15R)', short: 'Ignition', state: 'untested', provenance: 'HYPOTHESIS',
+    summary: 'The scan shows the ignition switch storing Terminal 15 and 15R short/open faults (9007, 9009), four other modules missing its CAN messages, and the SAM calling its terminal 15/15R signals implausible. The horn relay k1 is fed through the Terminal 15 relay k8 (manual Fig. 30), so a bad ignition feed could take out several systems at once.',
+    change_my_mind: 'Terminal 15 and 15R fuses read battery voltage with key on, relays k8/k6 switch, and EIS 9007/9009 do not come back after a key cycle.', symptom_links: ['horn', 'ac', 'trailer'],
+  }],
   ['sus-can', {
     position: 5, title: 'Network (CAN B / engine CAN)', short: 'Network', state: 'untested', provenance: 'HYPOTHESIS',
     summary: 'Cluster fault 9100 (engine CAN) and ESP/TCM CAN faults suggest bus trouble.',
@@ -196,14 +221,40 @@ const suspects: [string, Suspect][] = [
   }],
 ];
 
-const codes: [string, FaultCode][] = [
-  ['SAM', '90B5', 'Control unit faulty'], ['SAM', '9042', ''], ['SAM', '901D', ''], ['SAM', '9001', ''], ['SAM', '909F', ''], ['SAM', '9004', ''],
-  ['Instrument cluster', '9100', 'Engine CAN'], ['ESP', '44D8', ''], ['ESP', '44E8', ''],
-  ['TCM / selector', '—', 'CAN faults (codes not itemised in the summary)'],
-  ['Engine', '—', 'Mass airflow fault'], ['Engine', '—', 'Intake pressure / temperature fault'], ['Engine', '—', 'Water in fuel filter'],
-].map(([module, code, description], i) => [`code-${i + 1}`, {
-  module, code, description, status: 'unknown', date_read: '2026-10-09', source: 'TOPDON scan report', note: '', provenance: 'REPORTED',
+// Every code from the TOPDON report of 2026-10-09 (online report link in fact-scan), word for word.
+// "Current And Stored" -> active, "Stored" -> stored.
+const TOPDON = 'TOPDON report 2026-10-09';
+const dtc: [string, string, string, 'active' | 'stored'][] = [
+  ['Engine (CDI4 6-cyl)', '100B00', 'The upper limit value of component B2/14 (hot film mass air flow sensor) has been reached.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '104000', 'No CAN message was received from control unit EZS.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '105B00', 'No CAN message was received from control unit EZS.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '155C00', 'Signal engine off time from control unit KI is implausible.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '10BC00', 'No CAN message was received from control unit KLA.', 'stored'],
+  ['Engine (CDI4 6-cyl)', '161700', 'Component B2/14b1 (intake air temperature sensor) not within permissible range of values: on/off ratio of reference signal is outside of permissible range.', 'active'],
+  ['Engine (CDI4 6-cyl)', '161800', 'Component B2/14b1 (intake air temperature sensor) not within permissible range of values: there is a frequency or pulse width modulation fault.', 'active'],
+  ['EIS (ignition switch N73)', '9007', 'Terminal 15 - short circuit or open circuit.', 'stored'],
+  ['EIS (ignition switch N73)', '9009', 'Terminal 15R - short circuit or open circuit.', 'stored'],
+  ['ESP', '475C', 'No CAN message from control unit N73 (EIS [EZS] control unit).', 'stored'],
+  ['ESP', '4804', 'N30/4 (ESP control unit) - version coding string: INVALID.', 'stored'],
+  ['ESP', '5401', 'No or incorrect CAN message from control unit N73 (EIS [EZS] control unit).', 'stored'],
+  ['TCM (transmission)', 'C164', 'CAN bus - no or incorrect CAN message from control unit S98 (AAC [KLA] control and operating unit).', 'stored'],
+  ['TCM (transmission)', 'C141', 'CAN bus - no or incorrect CAN message from control unit N73 (EIS [EZS] control unit).', 'stored'],
+  ['Instrument cluster', '9100', 'Engine CAN bus - CAN bus fault.', 'stored'],
+  ['EWM (selector lever)', '0005', 'CAN bus - no CAN message from control unit N73 (EIS [EZS] control unit).', 'stored'],
+  ['SAM', '9091', 'Monitoring: signal input terminal 15 - CAN signal terminal 15 is implausible.', 'stored'],
+  ['SAM', '9042', 'E15/1 (front dome lamp with switch) - short circuit to positive.', 'active'],
+  ['SAM', '9001', 'Left side light - open circuit in wiring.', 'active'],
+  ['SAM', '909F', 'Brake wear sensor - open circuit in wiring.', 'active'],
+  ['SAM', '9004', 'Right side light - open circuit in wiring.', 'active'],
+  ['SAM', '901C', '[License plate lights - open circuit in wiring] or [side marker lamps - open circuit in wiring].', 'active'],
+  ['SAM', '9090', 'Monitoring: signal input circuit 15R - CAN signal circuit 15R is implausible.', 'stored'],
+  ['SAM', '90B5', 'The control unit is faulty.', 'active'],
+];
+const codes: [string, FaultCode][] = dtc.map(([module, code, description, status]) => [`dtc-${code.toLowerCase()}`, {
+  module, code, description, status, date_read: '2026-10-09', source: TOPDON, note: '', provenance: 'REPORTED',
 } as FaultCode]);
+/** Seed ids replaced by later seed content; ensureSeeded marks them deleted if nobody edited them. */
+export const RETIRED_SEED_IDS = Array.from({ length: 13 }, (_, i) => `code-${i + 1}`);
 
 const CAVEAT = 'General 906 reference, not matched to this VIN. Verify against the fuse-card and the van.';
 const READ_WIRING = 'Wiring pages show circuits, not physical layout. Follow a line from the power source (top) through fuses and switches to the part, then to its ground (bottom). Labels like W9/6 are ground points; F-numbers are fuses. Check every number against the fuse card before trusting it.';
@@ -267,6 +318,9 @@ const fuseList: [string, string, string, string, string][] = [
   ['fuse-k40-f1', KP, 'f1 (Fuse 1)', '15 A', 'Signaling horn fuse|FG K40/9 legend; SYS Fig. 30'],
   ['fuse-k40-k1', KP, 'k1 (relay)', 'relay', 'Horn relay|FG K40/9 legend; SYS Fig. 30'],
   ['fuse-k40-k8', KP, 'k8 (relay)', 'relay', 'Terminal 15 relay (feeds the horn relay)|FG K40/9 legend; SYS Fig. 30'],
+  ['fuse-k40-f18', KP, 'f18', '7.5 A', 'Terminal 15 fuse (ignition feed)|FG K40/9 legend'],
+  ['fuse-k40-f11', KP, 'f11', '15 A', 'Terminal 15R fuse|FG K40/9 legend'],
+  ['fuse-k40-k6', KP, 'k6 (relay)', 'relay', 'Terminal 15R relay|FG K40/9 legend'],
   ['fuse-f55-1-2', 'Fuse block 1 (F55/1) · top of fuse/relay box', 'Fuse 2', '10 A', 'Diagnostic socket (scanner port)|FG F55/1 legend; SYS Fig. 39'],
   ['fuse-f55-2-12', 'Fuse block 2 (F55/2) · top of fuse/relay box', 'Fuse 12', '30 A', 'Front blower|FG F55/2 legend; SYS Fig. 39'],
   ['fuse-f55-2-16', 'Fuse block 2 (F55/2) · top of fuse/relay box', 'Fuse 16', '10 A', 'Front climate control (A/C heater control S98)|FG F55/2 legend; SYS Fig. 1'],

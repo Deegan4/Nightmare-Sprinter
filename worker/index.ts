@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Rec } from '../shared/types';
-import { seedRecords } from '../shared/seed';
+import { RETIRED_SEED_IDS, seedRecords } from '../shared/seed';
 
 export interface Env {
   DB: D1Database;
@@ -23,6 +23,12 @@ async function ensureSeeded(db: D1Database) {
   const { results } = await db.prepare("SELECT id FROM records WHERE created_by = 'seed'").all<{ id: string }>();
   const have = new Set(results.map((r) => r.id));
   await upsert(db, seed.filter((r) => !have.has(r.id)));
+  // Retire seed records that later seed content replaced, unless someone edited them.
+  const retired = await db.prepare(
+    `SELECT * FROM records WHERE created_by = 'seed' AND deleted = 0 AND id IN (${RETIRED_SEED_IDS.map(() => '?').join(',')})`,
+  ).bind(...RETIRED_SEED_IDS).all<any>();
+  const stale = retired.results.filter((r) => r.updated_at === r.created_at);
+  if (stale.length) await upsert(db, stale.map((r) => ({ ...r, data: JSON.parse(r.data), deleted: true, updated_at: Date.now() })));
 }
 
 /** Last-write-wins upsert. Client-generated ids make retries idempotent (no duplicates). */

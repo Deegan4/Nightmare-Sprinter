@@ -34,7 +34,7 @@ assert.ok(box && box.y + box.height < 800, 'next step visible without scrolling 
 await shot(D, '01-home-android');
 await D.getByRole('button', { name: /Add reading, photo or note/ }).click();
 await D.locator('.fab-item', { hasText: 'Add reading' }).click();
-await D.getByRole('button', { name: /^4\. Trailer/ }).click();
+await D.getByRole('button', { name: /^\d\. Trailer/ }).click();
 await D.getByRole('button', { name: /Seat-base ground W71\/3 drop/ }).click();
 await D.fill('input[inputmode=decimal]', '0.35');
 await D.locator('#verdict').getByText('FAIL: does not meet the rule').waitFor();
@@ -65,7 +65,7 @@ log('AT1 photo synced and viewable on the other phone');
 // --- AT3: 0.1 V passes
 await K.getByRole('button', { name: /Add reading, photo or note/ }).click();
 await K.locator('.fab-item', { hasText: 'Add reading' }).click();
-await K.getByRole('button', { name: /^2\. Horn/ }).click();
+await K.getByRole('button', { name: /^\d\. Horn/ }).click();
 await K.getByRole('button', { name: /Horn ground voltage drop/ }).click();
 await K.fill('input[inputmode=decimal]', '0.1');
 await K.locator('#verdict').getByText('PASS: meets the rule').waitFor();
@@ -76,7 +76,7 @@ log('AT3 0.35 V → FAIL, 0.1 V → PASS, wording is "meets / does not meet the 
 await dad.setOffline(true);
 await D.getByRole('button', { name: /Add reading, photo or note/ }).click();
 await D.locator('.fab-item', { hasText: 'Add reading' }).click();
-await D.getByRole('button', { name: /^4\. Trailer/ }).click();
+await D.getByRole('button', { name: /^\d\. Trailer/ }).click();
 await D.getByRole('button', { name: /Trailer terminal 4 constant 12 V/ }).click();
 await D.fill('input[inputmode=decimal]', '12.4');
 await D.getByRole('button', { name: 'Save reading' }).click();
