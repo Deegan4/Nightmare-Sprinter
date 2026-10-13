@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-demo/
+.wrangler/
+.dev.vars
+*.log
+# Private third-party manuals: never commit (see reference-source/README.md)
+reference-source/*
+!reference-source/README.md
+reference-images/
+owner-key.txt

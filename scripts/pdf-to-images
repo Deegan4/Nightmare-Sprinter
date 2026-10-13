@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Convert pages of a PRIVATE manual PDF to images, store them, and attach them to one
+# Library page. The PDFs and images never go into git.
+#
+# Usage:
+#   scripts/pdf-to-images <file.pdf> <reference-page-id> <first-page> [last-page] [--local|--remote]
+# Env:
+#   STORAGE=r2 (default) uploads to the R2 bucket; STORAGE=d1 stores the images in D1 (blob_chunks)
+#   WRANGLER_ARGS="-c wrangler.temporary.toml --temporary"  extra args for every wrangler call
+#
+# Reference ids: ref-horn ref-trailer ref-power ref-ac ref-grounds-a ref-body-control ref-grounds-b ref-fuse-box
+#                ref-battery ref-connectors ref-turn-signal
+set -euo pipefail
+
+PDF="${1:?pdf path}"; REF="${2:?reference page id}"; FIRST="${3:?first page}"; LAST="${4:-$3}"
+MODE="${5:---local}"
+STORAGE="${STORAGE:-r2}"
+read -r -a WA <<< "${WRANGLER_ARGS:-}"
+BUCKET="van-fix"; DB="van-fix"
+command -v pdftoppm >/dev/null || { echo "Install poppler-utils (pdftoppm) first"; exit 1; }
+[[ "$REF" =~ ^[a-z0-9-]+$ ]] || { echo "bad reference id"; exit 1; }
+
+OUT="reference-images/$REF"
+rm -rf "$OUT"; mkdir -p "$OUT"
+pdftoppm -r 150 -png -f "$FIRST" -l "$LAST" "$PDF" "$OUT/page"
+
+KEYS=()
+for f in "$OUT"/page-*.png; do
+  key="ref/$REF/$(basename "$f")"
+  if [[ "$STORAGE" == "d1" ]]; then
+    # One INSERT per 45 KB chunk keeps every SQL statement under D1's 100 KB limit.
+    node -e '
+      const fs = require("fs"); const [file, key] = process.argv.slice(1);
+      const b = fs.readFileSync(file); const C = 45 * 1024; const q = (s) => s.replace(/\x27/g, "\x27\x27");
+      let sql = `DELETE FROM blob_chunks WHERE key = \x27${q(key)}\x27;\n`;
+      for (let i = 0, n = 0; i < b.length; i += C, n++)
+        sql += `INSERT INTO blob_chunks (key, idx, content_type, data) VALUES (\x27${q(key)}\x27, ${n}, \x27image/png\x27, X\x27${b.subarray(i, i + C).toString("hex")}\x27);\n`;
+      fs.writeFileSync(file + ".sql", sql);' "$f" "$key"
+    npx wrangler d1 execute "$DB" "$MODE" "${WA[@]}" --file "$f.sql" >/dev/null
+  else
+    npx wrangler r2 object put "$BUCKET/$key" --file "$f" --content-type image/png "$MODE" "${WA[@]}"
+  fi
+  echo "stored $key"
+  KEYS+=("\"$key\"")
+done
+JSON_KEYS="[$(IFS=,; echo "${KEYS[*]}")]"
+NOW=$(($(date +%s) * 1000))
+
+# Attach the images to the Library page and bump its sequence so every phone syncs it.
+npx wrangler d1 execute "$DB" "$MODE" "${WA[@]}" --command "
+UPDATE counter SET value = value + 1 WHERE name = 'seq';
+UPDATE records SET
+  data = json_set(data, '$.image_key', json_extract('$JSON_KEYS', '\$[0]'), '$.image_keys', json('$JSON_KEYS')),
+  updated_at = $NOW,
+  seq = (SELECT value FROM counter WHERE name = 'seq')
+WHERE id = '$REF' AND kind = 'reference_page';" >/dev/null
+echo "Attached ${#KEYS[@]} page image(s) to $REF"
