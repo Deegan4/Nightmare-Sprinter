@@ -29,6 +29,7 @@ export function Library({ tag }: { tag?: string }) {
   return (
     <div class="anim-in">
       <PageHead title="Library" kicker="Wiring & location pages" />
+      <a class="item" href="#/sheet" style="margin:12px 0;border-color:#1f3b63;border-width:3px"><span class="brand-mark" style="width:44px;height:44px;flex:none;background:#1f3b63;color:#fff"><Icon name="plan" /></span><span class="grow"><h3>Wiring sheet</h3><span class="small muted">Everything on one page: components, power flow, fuses, horn / A/C / trailer circuits</span></span><Icon name="chev" class="chev" /></a>
       <Caveat text="General 906 reference, not matched to this VIN. Verify against the fuse-card and the van." />
       <div class="chips" style="margin:14px 0;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px" role="group" aria-label="Filter by system">
         <a class="chip sm" href="#/library" aria-pressed={!tag} style="text-decoration:none;flex:none">All</a>

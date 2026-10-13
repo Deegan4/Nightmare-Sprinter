@@ -6,7 +6,7 @@ export const PROVENANCES: Provenance[] = ['CONFIRMED', 'REPORTED', 'HYPOTHESIS',
 
 export type Kind =
   | 'vehicle' | 'fact' | 'step' | 'reading' | 'rule' | 'suspect' | 'evidence'
-  | 'fault_code' | 'reference_page' | 'zone' | 'photo' | 'note' | 'event';
+  | 'fault_code' | 'reference_page' | 'zone' | 'photo' | 'note' | 'event' | 'fuse';
 
 export interface Rec<T = any> {
   id: string;
@@ -58,6 +58,8 @@ export interface Rule {
 export type SuspectState = 'untested' | 'leaning' | 'ruled_out' | 'confirmed';
 export interface Suspect { title: string; short: string; state: SuspectState; provenance: Provenance; summary: string; change_my_mind: string; position: number; symptom_links: string[] }
 export interface Evidence { suspect_id: string; text: string; reading_id?: string; direction: 'for' | 'against' }
+
+export interface Fuse { box: string; number: string; amps: string; function: string; provenance: Provenance; source: string; position: number }
 
 export interface FaultCode { module: string; code: string; description: string; status: 'active' | 'stored' | 'unknown' | 'cleared'; date_read: string; source: string; photo_id?: string; note: string; provenance: Provenance }
 

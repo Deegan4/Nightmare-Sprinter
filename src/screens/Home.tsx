@@ -32,6 +32,7 @@ export function Home() {
           <a class="btn primary block" href="#/summary"><Icon name="copy" />Copy summary</a></div></div>
       )}
 
+      <a class="item" href="#/sheet" style="margin-top:16px;border-color:#1f3b63;border-width:3px"><span class="brand-mark" style="width:44px;height:44px;flex:none;background:#1f3b63;color:#fff"><Icon name="plan" /></span><span class="grow"><h3>Wiring sheet</h3><span class="small muted">Components, power flow, fuses and all 3 circuits on one page</span></span><Icon name="chev" class="chev" /></a>
       <div class="card" style="margin-top:16px">
         <div class="strip">
           <span><Icon name="check" />{done}/{all.length} steps done</span>

@@ -12,6 +12,7 @@ fault codes, wiring reference pages, a van map, and a timeline. Works offline an
 - **Suspects**: the 5 hypotheses, a symptom-to-suspect map, evidence for/against.
 - **Codes**: the 2026-10-09 TOPDON codes, with a "never clear before logging" guard.
 - **Library**: wiring/fuse/ground page images from the private manuals, pinch-zoom, provenance + source on every page.
+- **Wiring sheet**: one page in the reference-infographic layout (components, power flow, fuse tables, horn / A/C / trailer circuits, real photos, quick steps), filled from the manuals.
 - **Map**: top-down and side views of the van with numbered points, a circuit overview built only from
   sourced facts, and **real photos you can tap to mark where each part actually is** (turns "approximate" into "confirmed").
 - **Copy summary / print** for Claude or a mechanic. Export all data as JSON.
@@ -30,11 +31,13 @@ Then on your phone open `https://<your-worker>.workers.dev/#/setup`, enter the o
 Go to **More → Invite & people → Create link** and text the link to Dad. He just types his name.
 
 ### Add the manual pages (private)
-Put the PDFs in `reference-source/` (git-ignored), then for each figure:
+Download two PDFs from your Google Drive into `reference-source/` (git-ignored):
+`System Wiring Diagram.pdf` → `reference-source/system-wiring.pdf` and
+`Wiring Diagrams (Fuse Block, Grounds).pdf` → `reference-source/fuse-grounds.pdf`. Then:
 ```bash
-scripts/pdf-to-images reference-source/sprinter-wiring.pdf ref-horn 30 30 --remote
+scripts/load-manual-pages.sh --remote
 ```
-Reference ids: `ref-horn ref-trailer ref-power ref-ac ref-grounds-a ref-body-control ref-grounds-b ref-fuse-box`.
+That uploads every Library figure (horn, trailer, A/C, power distribution, grounds, fuse/relay box) at the right pages.
 
 ## Develop
 See `CLAUDE.md` for all commands, the data model and the hard rules (provenance labels, no invented fuse numbers).

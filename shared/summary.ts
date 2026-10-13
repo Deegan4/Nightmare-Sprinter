@@ -1,4 +1,4 @@
-import type { Rec, Vehicle, Fact, Step, Reading, Rule, Suspect, FaultCode, Evidence, Note, ReferencePage } from './types';
+import type { Rec, Vehicle, Fact, Step, Reading, Rule, Suspect, FaultCode, Evidence, Note, ReferencePage, Fuse } from './types';
 import { CONDITIONS } from './types';
 
 const P = (p: string) => (p === 'SOURCE' ? '[SOURCE, unverified for this VIN]' : `[${p}]`);
@@ -63,6 +63,9 @@ export function buildSummary(all: Rec[]): string {
     notes.forEach((n) => L.push(`- ${day(n.created_at)} ${n.created_by}: ${n.data.text}`));
     L.push('');
   }
+  L.push('== FUSES ==');
+  of<Fuse>('fuse').sort((a, b) => a.data.position - b.data.position).forEach((f) => L.push(`- ${P(f.data.provenance)} ${f.data.box}: ${f.data.number}, ${f.data.amps}, ${f.data.function} (source: ${f.data.source})`));
+  L.push('');
   L.push('== PASS/FAIL RULES ==');
   of<Rule>('rule').forEach((r) => L.push(`- ${P(r.data.provenance)} ${r.data.label}: ${r.data.comparator === 'max' ? `meets at ${r.data.a} V or less` : r.data.comparator === 'min' ? `meets at ${r.data.a} V or more` : `meets between ${r.data.a} and ${r.data.b} V`}. ${r.data.explanation} (${r.data.source})`));
   L.push('');

@@ -1,5 +1,5 @@
-// "How the three dead systems connect": an infographic built ONLY from facts in
-// the PRD / source pages. It shows connections, not physical positions, and
+// "How the three dead systems connect": built ONLY from the PRD facts and the owner's
+// manuals (System Wiring Diagram Figs. 1, 24, 30, 38-40; fuse/relay box legend). It shows connections, not physical positions, and
 // invents no fuse numbers, pins or wire colours. Colours = circuit type.
 import { Frame, GroundSym } from './parts';
 
@@ -62,55 +62,55 @@ export function CircuitOverview() {
       {/* SAM */}
       <rect x="60" y="186" width="280" height="74" rx="10" class="il-accent" />
       <text x="200" y="210" text-anchor="middle" style="font:700 19px var(--font-display);fill:#121417">SAM / SRB (body control)</text>
-      <text x="200" y="228" text-anchor="middle" style="font:600 12px var(--font-body);fill:#121417">horn relay lives here · CAN B gateway</text>
+      <text x="200" y="228" text-anchor="middle" style="font:600 12px var(--font-body);fill:#121417">left kick panel box · horn relay k1 · CAN B</text>
       <text x="92" y="248" style="font:600 12px var(--font-body);fill:#121417">refurbished unit · coding:</text>
       <Tag x={252} y={237} t="UNKNOWN" />
 
       {/* horn */}
       <path d="M100 260 V300" style={wire(C.horn)} />
-      <Panel x={8} y={280} w={330} h={92} color={C.horn} title="HORN" />
-      <Box x={20} y={312} w={92} h={44} title="Horn relay" sub="(in SAM)" color={C.horn} />
+      <Panel x={8} y={280} w={364} h={92} color={C.horn} title="HORN" />
+      <Box x={20} y={312} w={92} h={44} title="k1 + f1 15 A" sub="(kick panel)" color={C.horn} />
       <path d="M112 334 H150" style={wire(C.horn)} />
       <path d="M150 316 l26 -10 v56 l-26 -10 z" fill="var(--il-fill2)" stroke={C.horn} stroke-width="2.5" />
       <text x="163" y="368" class="il-text mid sm">horn</text>
       <path d="M176 334 H214 V342" style="stroke:var(--il-gnd);stroke-width:4;fill:none" />
       <GroundSym x={214} y={354} />
-      <text x="232" y="320" class="il-text sm">ground W9/6</text>
-      <text x="232" y="335" class="il-text sm" style="font-weight:600">L front lamp ground,</text>
-      <text x="232" y="349" class="il-text sm" style="font-weight:600">shared: SRB, engine, ESP</text>
+      <text x="232" y="320" class="il-text sm">ground G104</text>
+      <text x="232" y="335" class="il-text sm" style="font-weight:600">L side engine compt</text>
+      <text x="232" y="349" class="il-text sm" style="font-weight:600">(MB name: W9/6)</text>
       <Tag x={232} y={353} t="SOURCE" />
 
       {/* CAN B */}
-      <path d="M320 260 V398" style={wire(C.can, 4)} stroke-dasharray="8 5" />
-      <path d="M40 398 H360" style={wire(C.can, 6)} stroke-dasharray="10 6" />
+      <path d="M340 226 H386 V398" style={wire(C.can, 4)} stroke-dasharray="8 5" />
+      <path d="M40 398 H386" style={wire(C.can, 6)} stroke-dasharray="10 6" />
       <rect x="128" y="384" width="144" height="26" rx="13" fill="var(--il-fill)" stroke={C.can} stroke-width="2.5" />
       <text x="200" y="402" text-anchor="middle" style={`font:700 14px var(--font-display);fill:${C.can}`}>CAN B NETWORK</text>
-      <text x="348" y="276" class="il-text sm end" style={`fill:${C.can}`}>bus</text>
+      <text x="380" y="216" class="il-text sm end" style={`fill:${C.can}`}>bus</text>
       <path d="M100 398 V428 M300 398 V428" style={wire(C.can, 4)} stroke-dasharray="8 5" />
 
       {/* A/C */}
       <Panel x={8} y={420} w={186} h={196} color={C.ac} title="A/C (FRONT ONLY)" />
-      <Box x={18} y={452} w={166} h={42} title="A/C control module" sub="scan: listed OK" color={C.ac} />
+      <Box x={18} y={452} w={166} h={42} title="A/C control S98" sub="blk 2 f16 10 A · scan OK" color={C.ac} />
       <Tag x={120} y={496} t="REPORTED" />
       <path d="M100 494 V530" style={wire(C.ac)} />
-      <Box x={18} y={530} w={166} h={42} title="Compressor" sub="solenoid control valve?" color={C.ac} />
-      <Tag x={104} y={574} t="HYPOTHESIS" />
+      <Box x={18} y={530} w={166} h={42} title="Compressor A9" sub="1 wire: control valve" color={C.ac} />
+      <Tag x={120} y={574} t="SOURCE" />
       <circle cx="30" cy="596" r="7" fill="#1d1a12" stroke="var(--accent)" stroke-width="2" />
       <text x="42" y="600" class="il-text sm">oil in compressor plug</text>
       <Tag x={20} y={604} t="CONFIRMED" />
 
       {/* trailer */}
       <Panel x={206} y={420} w={186} h={196} color={C.trailer} title="TRAILER LIGHTS" />
-      <Box x={216} y={452} w={166} h={42} title="Trailer unit" sub="on CAN B" color={C.trailer} />
+      <Box x={216} y={452} w={166} h={42} title="Trailer module" sub="REAR · f15 25 A + f4 7.5 A" color={C.trailer} />
       <path d="M240 494 V512" style="stroke:var(--il-gnd);stroke-width:4" />
       <GroundSym x={240} y={524} />
-      <text x="256" y="514" class="il-text sm">W71/3 seat base</text>
-      <text x="256" y="530" class="il-text sm">+ left footwell</text>
+      <text x="256" y="514" class="il-text sm">G305 lower L side</text>
+      <text x="256" y="530" class="il-text sm">(MB: W71/3, L footwell)</text>
       <path d="M216 552 H382" class="il-thin" opacity=".4" />
       <circle cx="234" cy="580" r="15" fill="var(--il-fill2)" stroke={C.trailer} stroke-width="2.5" />
       <circle cx="234" cy="580" r="4" fill={C.trailer} />
       <text x="256" y="572" class="il-text sm">socket terminal 4 =</text>
-      <text x="256" y="587" class="il-text sm">constant 12 V (20 A)</text>
+      <text x="256" y="587" class="il-text sm">blk 4 fuse 14 (20 A)</text>
       <Tag x={256} y={594} t="SOURCE" />
 
       {/* legend + takeaway */}

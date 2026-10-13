@@ -13,7 +13,7 @@ interface Member { id: string; display_name: string; role: 'owner' | 'collaborat
 type Ctx = { Bindings: Env; Variables: { member: Member } };
 
 const COOKIE = 'vf_session';
-const KINDS = new Set(['vehicle', 'fact', 'step', 'reading', 'rule', 'suspect', 'evidence', 'fault_code', 'reference_page', 'zone', 'photo', 'note', 'event']);
+const KINDS = new Set(['vehicle', 'fact', 'step', 'reading', 'rule', 'suspect', 'evidence', 'fault_code', 'reference_page', 'zone', 'photo', 'note', 'event', 'fuse']);
 const MAX_PHOTO = 8 * 1024 * 1024;
 
 const enc = new TextEncoder();
@@ -32,10 +32,12 @@ function timingSafeEqual(a: string, b: string) {
   return d === 0;
 }
 
+/** Insert any seed records that are missing (new seed content reaches existing installs; edits are never overwritten). */
 async function ensureSeeded(db: D1Database) {
-  const has = await db.prepare("SELECT 1 FROM records WHERE kind = 'vehicle' LIMIT 1").first();
-  if (has) return;
-  await upsert(db, seedRecords());
+  const seed = seedRecords();
+  const { results } = await db.prepare(`SELECT id FROM records WHERE id IN (${seed.map(() => '?').join(',')})`).bind(...seed.map((r) => r.id)).all<{ id: string }>();
+  const have = new Set(results.map((r) => r.id));
+  await upsert(db, seed.filter((r) => !have.has(r.id)));
 }
 
 /** Last-write-wins upsert. Client-generated ids make retries idempotent (no duplicates). */
@@ -153,6 +155,7 @@ app.post('/api/logout', async (c) => {
 });
 
 app.get('/api/sync', async (c) => {
+  if (!Number(c.req.query('since'))) await ensureSeeded(c.env.DB);
   const since = Number(c.req.query('since') ?? 0) || 0;
   const { results } = await c.env.DB.prepare('SELECT * FROM records WHERE seq > ? ORDER BY seq LIMIT 2000').bind(since).all<any>();
   const records = results.map((r) => ({ ...r, data: JSON.parse(r.data), deleted: !!r.deleted }));

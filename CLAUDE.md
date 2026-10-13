@@ -33,8 +33,18 @@ inside the same D1 batch transaction so `/api/sync?since=` never skips rows. `ev
 - Readings say "meets / does not meet the rule", never "part is bad".
 - Do NOT invent fuse numbers, pinouts, wire colours or connector cavities. Drawings in `src/illus/`
   are tagged APPROXIMATE or CONCEPT; real locations come from photos people mark in the app.
-- The earlier AI-generated "wiring diagram" infographic (made-up F1-F5 main fuse box, F55/x trailer
-  fuses, "clutch relay", etc.) must not be added anywhere.
+- The earlier AI-generated "wiring diagram" infographic must not be added. Its LAYOUT is what the
+  Wiring Sheet (`src/screens/Sheet.tsx`) copies; its DATA is not used. Checked against the manuals:
+  its F55/4 fuse 14 (20 A trailer socket) and fuse 15 (25 A AAG) match, but its "main fuse box F1-F5",
+  "horn relay in engine-bay box", "A/C clutch relay" and "F55/3-9 7.5 A A/C" do not.
+
+## Where the real data comes from
+The owner's manuals are in their Google Drive (shared by gadget.manual@gmail.com):
+- "System Wiring Diagram.pdf" (cardiagn.com set, 94 pp): Fig. 1-3 A/C p.2-4, Fig. 24 trailer p.33,
+  Fig. 25-27 grounds p.35-37, Fig. 30 horn p.42, Fig. 38-42 power distribution p.54-58.
+- "Wiring Diagrams (Fuse Block, Grounds).pdf" (Mercedes format, 111 pp, has a text layer): fuse/relay box
+  K40/9 legend (US version PE54.15-D-2001-97AB), F55/1-7 fuse block legends, ground point legends.
+Seeded fuses/facts cite the figure they came from. `scripts/load-manual-pages.sh` uploads all Library pages.
 - Manual PDFs/images are private: never commit them (`reference-source/` is git-ignored), never serve them publicly.
   Everything sends `noindex`; `robots.txt` disallows all.
 

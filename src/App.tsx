@@ -22,7 +22,7 @@ const TABS = [
   { key: 'library', label: 'Library', icon: 'library' },
   { key: 'more', label: 'More', icon: 'more' },
 ];
-const TAB_OF: Record<string, string> = { step: 'plan', suspect: 'suspects', ref: 'library', map: 'more', zone: 'more', timeline: 'more', van: 'more', share: 'more', summary: 'more', settings: 'more' };
+const TAB_OF: Record<string, string> = { sheet: 'library', step: 'plan', suspect: 'suspects', ref: 'library', map: 'more', zone: 'more', timeline: 'more', van: 'more', share: 'more', summary: 'more', settings: 'more' };
 
 function SyncPill() {
   if (status.auth === 'demo') return <span class="sync-pill" title="Demo: saved on this phone only"><span class="dot" style="background:var(--accent)" />Demo</span>;
@@ -55,6 +55,14 @@ function Fab() {
   );
 }
 
+// The wiring sheet is the heaviest screen, so it loads on first visit (kept out of the shell bundle).
+let SheetMod: typeof import('./screens/Sheet') | null = null;
+function LazySheet() {
+  const [, set] = useState(0);
+  if (!SheetMod) { import('./screens/Sheet').then((m) => { SheetMod = m; set(1); }); return <p class="muted">Loading wiring sheet…</p>; }
+  return <SheetMod.WiringSheet />;
+}
+
 function Screen({ r }: { r: string[] }) {
   const [a, b] = r;
   switch (a) {
@@ -74,6 +82,7 @@ function Screen({ r }: { r: string[] }) {
     case 'share': return <Share />;
     case 'summary': return <Summary />;
     case 'settings': return <Settings />;
+    case 'sheet': return <LazySheet />;
     default: return <Home />;
   }
 }
@@ -89,7 +98,7 @@ export function App() {
   return (
     <>
       <a class="visually-hidden" href="#main">Skip to content</a>
-      <div class="app">
+      <div class={`app${r[0] === 'sheet' ? ' wide' : ''}`}>
         <header class="topbar">
           <a class="brand" href="#/"><span class="brand-mark"><Icon name="van" /></span>Van Fix</a>
           <span class="spacer" />

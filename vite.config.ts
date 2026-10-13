@@ -19,6 +19,10 @@ function serviceWorker(): Plugin {
 
 export default defineConfig({
   plugins: [preact(), serviceWorker()],
-  build: { target: 'es2020', sourcemap: false, assetsInlineLimit: 0 },
+  build: {
+    target: 'es2020', sourcemap: false, assetsInlineLimit: 0,
+    // The demo page is a single HTML file, so it can't load split chunks.
+    rollupOptions: process.env.VITE_DEMO === '1' ? { output: { inlineDynamicImports: true } } : {},
+  },
   server: { proxy: { '/api': 'http://127.0.0.1:8787' } },
 });
