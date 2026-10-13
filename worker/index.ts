@@ -158,7 +158,7 @@ app.post('/api/join', async (c) => {
   if (!inv || inv.revoked_at) return c.json({ error: 'This invite link is not valid any more. Ask Kollin for a new one.' }, 403);
   if (!cleanName(name)) return c.json({ error: 'Enter your name.' }, 400);
   await ensureSeeded(c.env.DB);
-  return c.json({ member: await startSession(c, inv.id, cleanName(name), 'collaborator') });
+  return c.json({ member: await startSession(c, inv.id, cleanName(name), inv.role === 'owner' ? 'owner' : 'collaborator') });
 });
 
 // ---------- session required ----------
