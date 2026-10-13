@@ -87,7 +87,8 @@ export async function syncNow() {
   setStatus({ syncing: true });
   try {
     await pushOutbox();
-    await uploadBlobs();
+    // Photo upload problems (no connection, storage not set up) must never block readings and notes.
+    await uploadBlobs().catch((e) => { if (e instanceof SignedOut) throw e; });
     await pull();
     setStatus({ online: true, error: '', lastSync: Date.now(), pending: (await idbKeys('outbox')).length });
   } catch (e) {

@@ -5,7 +5,8 @@ import { seedRecords } from '../shared/seed';
 
 export interface Env {
   DB: D1Database;
-  BUCKET: R2Bucket;
+  /** Optional: without R2, photos stay on the phones and manual pages are unavailable. */
+  BUCKET?: R2Bucket;
   ASSETS: Fetcher;
   OWNER_KEY?: string;
 }
@@ -80,7 +81,26 @@ async function startSession(c: any, inviteId: string, name: string, role: string
 
 const cleanName = (s: unknown) => String(s ?? '').trim().slice(0, 40);
 
+// Create tables on first use, so a fresh deploy works even if migrations were never run.
+// Mirrors migrations/0001_init.sql (all statements are idempotent).
+const SCHEMA = [
+  'CREATE TABLE IF NOT EXISTS records (id TEXT PRIMARY KEY, kind TEXT NOT NULL, vehicle_id TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, created_by TEXT NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, seq INTEGER NOT NULL)',
+  'CREATE INDEX IF NOT EXISTS records_seq ON records(seq)',
+  'CREATE INDEX IF NOT EXISTS records_kind ON records(vehicle_id, kind)',
+  'CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER NOT NULL)',
+  "INSERT OR IGNORE INTO counter (name, value) VALUES ('seq', 0)",
+  'CREATE TABLE IF NOT EXISTS invites (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, label TEXT NOT NULL, role TEXT NOT NULL, created_at INTEGER NOT NULL, revoked_at INTEGER)',
+  'CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, display_name TEXT NOT NULL, role TEXT NOT NULL, invite_id TEXT NOT NULL, session_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0)',
+  'CREATE TABLE IF NOT EXISTS rate (ip TEXT NOT NULL, win INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (ip, win))',
+];
+let schemaReady: Promise<unknown> | null = null;
+const ensureSchema = (db: D1Database) => (schemaReady ??= db.batch(SCHEMA.map((q) => db.prepare(q))).catch((e) => { schemaReady = null; throw e; }));
+
+const noBucket = (c: any) => c.json({ error: 'Photo storage (R2) is not set up yet. Photos stay saved on this phone.' }, 503);
+
 const app = new Hono<Ctx>();
+
+app.use('/api/*', async (c, next) => { await ensureSchema(c.env.DB); await next(); });
 
 app.use('*', async (c, next) => {
   await next();
@@ -187,11 +207,13 @@ app.put('/api/photos/:id', async (c) => {
   if (len > MAX_PHOTO) return c.json({ error: 'Photo too large' }, 413);
   const body = await c.req.arrayBuffer();
   if (body.byteLength > MAX_PHOTO) return c.json({ error: 'Photo too large' }, 413);
+  if (!c.env.BUCKET) return noBucket(c);
   await c.env.BUCKET.put(`photos/${id}.jpg`, body, { httpMetadata: { contentType: 'image/jpeg' } });
   return c.json({ ok: true });
 });
 
 async function serveObject(c: any, key: string) {
+  if (!c.env.BUCKET) return noBucket(c);
   const obj = await c.env.BUCKET.get(key);
   if (!obj) return c.json({ error: 'not found' }, 404);
   return new Response(obj.body, {
@@ -254,6 +276,7 @@ app.all('/api/*', (c) => c.json({ error: 'not found' }, 404));
 export default {
   fetch: app.fetch,
   async scheduled(_e: ScheduledController, env: Env) {
+    if (!env.BUCKET) return;
     const data = await exportAll(env.DB);
     await env.BUCKET.put(`backups/${data.exported_at.slice(0, 10)}.json`, JSON.stringify(data), { httpMetadata: { contentType: 'application/json' } });
   },
