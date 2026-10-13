@@ -41,6 +41,12 @@ Everything on one page: component locations, power and control flow, fuse tables
 
 The sheet also has an **ignition feed** panel (EIS N73 → SAM → relays k8 / k6 → f18, f11, f13, from Figs. 39-40) and a **CAN network** panel that overlays the scan's "no CAN message from…" codes on the module map.
 
+### Ground locations
+
+Every ground point printed in the two wiring manuals, in the manuals' own words, with what is wired to each one. Red marks the grounds the SAM, horn, A/C, trailer module, ignition switch and network use.
+
+<p align="center"><img src="docs/images/ground-map.png" alt="Callout map of all 31 ground points around a top view of the van, grouped by area, with the SAM, ignition, A/C, horn and trailer grounds in red" width="100%"></p>
+
 ### See-through wiring
 
 An x-ray of the van, **from above or from the driver’s side**. 24 parts (modules, fuse boxes, plugs and grounds) each sit in the area a source names, with seven circuit layers you can switch on and off: battery power, ignition, horn, A/C, trailer, CAN and grounds. Tap a part to see where it is, what it does, what it connects to and which figure says so. Red badges mark modules with scan codes. Lines are connections from the wiring figures, not harness routes, and the cab is drawn wider than life so the parts fit.
@@ -58,6 +64,7 @@ An x-ray of the van, **from above or from the driver’s side**. 24 parts (modul
 | **Fault codes** | The 2026-10-09 TOPDON scan, editable, with a "write it down before you clear it" guard. |
 | **Library** | 51 manual pages (horn, trailer, A/C, power distribution, grounds, fuse box, battery, connectors) with pinch-zoom on both iOS and Android. Off on the open app (third-party manuals); turn on with `SERVE_MANUALS=1` for a private deployment. |
 | **See-through wiring** | X-ray of the van from above or the driver’s side, with switchable circuit layers and a detail card for every part. |
+| **Ground locations** | All 31 ground points from both manuals (G-numbers and Mercedes W-numbers), grouped by the area each manual names, with every part wired to them. |
 | **Photos with markers** | Photograph an area, tap where each part is, and the location becomes CONFIRMED everywhere it's shown. |
 | **Timeline** | Who measured what and when, filterable by person or type. |
 | **Copy summary** | Plain-text summary with every label, ready to paste to Claude or a mechanic. Printable for a shop visit. |

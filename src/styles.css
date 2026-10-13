@@ -402,3 +402,23 @@ textarea.input { min-height: 96px; resize: vertical; }
 .xr-links .xr-swatch { margin-top: 5px; }
 .linkish { background: none; border: 0; padding: 0; font: inherit; font-weight: 800; color: var(--link, var(--accent-ink, inherit)); text-decoration: underline; cursor: pointer; min-height: 0; }
 @media (max-width: 520px) { .xr-dl { grid-template-columns: 1fr; gap: 2px; } .xr-dl dd { margin-bottom: 8px; } }
+
+/* Ground locations */
+.xr-code-pill.hot { border-color: #ff5a4e; }
+.gr-card { padding: 0; list-style: none; }
+.gr-head { display: flex; gap: 10px; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 12px 14px; font: inherit; color: inherit; cursor: pointer; min-height: 56px; }
+.gr-body { padding: 0 14px 14px; }
+.gr-parts { margin: 0; padding-left: 20px; }
+.gr-parts li + li { margin-top: 4px; }
+.gr-table { width: 100%; border-collapse: collapse; }
+.gr-table th, .gr-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.gr-table th { font-size: 13px; color: var(--muted); }
+@media (max-width: 760px) { .gm-svg { width: 1000px; } }
+.gr-wrap { padding: 0; overflow-x: auto; }
+.gr-wrap .gr-table { min-width: 640px; }
+.gr-table tbody tr { cursor: pointer; }
+.gr-table tbody tr.sel { background: color-mix(in srgb, #ffd23f 18%, transparent); }
+.gr-table td:first-child { white-space: nowrap; }
+.gr-hits { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.gr-hits span { font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: #3a1416; color: #ffd0cb; }
+.gr-cam { margin-top: 6px; min-height: 36px; padding: 4px 8px; display: flex; }

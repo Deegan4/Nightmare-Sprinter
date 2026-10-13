@@ -21,6 +21,8 @@ trailer lights all dead). Spec: the PRD in the first PR description / README.
 - `src/` – Preact SPA. `lib/` store/sync/IndexedDB, `screens/`, `illus/` (all SVG drawings), `components/`.
   `illus/xray.tsx` + `screens/Xray.tsx` = see-through view (#/xray), top and driver-side (SIDE heights): every node cites its source;
   lines/arcs are connections, not routes.
+  `shared/grounds.ts` + `screens/Grounds.tsx` (#/grounds): all G (System Wiring Diagram Figs. 25-27) and W (Mercedes PE54.00-D-2000)
+  ground points, location text verbatim; G↔W pairing is HYPOTHESIS only.
 - `migrations/` – D1 SQL.
 
 ## Data model decision
