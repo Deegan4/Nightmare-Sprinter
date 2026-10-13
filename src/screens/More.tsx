@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import type { Fact, Provenance, Rec, Step, TimelineEvent, Vehicle, Zone } from '../../shared/types';
 import { buildSummary } from '../../shared/summary';
 import { Icon } from '../components/icons';
-import { Chips, PageHead, Prov, Sheet, Status, ago, ask, toast, when } from '../components/ui';
+import { Chips, PageHead, Prov, Sheet, Status, toast, when } from '../components/ui';
 import { ZONE_SCENES } from '../illus/scenes';
 import { PinKey, PinLegend, VanSide, VanTop } from '../illus/van';
 import { photos, refs, zones } from '../lib/data';
 import { go, href } from '../lib/router';
 import { allRecords, get, list, logEvent, patch, save, status, useStore } from '../lib/store';
-import { DEMO, api } from '../lib/sync';
+import { DEMO, setName as saveMyName } from '../lib/sync';
 import { getTheme, setTheme, type ThemePref } from '../lib/theme';
-import { idbClear, idbPut } from '../lib/idb';
+import { idbPut } from '../lib/idb';
 import { PhotoGrid, openSheet } from './sheets';
 import { MarkedPhoto } from '../components/MarkedPhoto';
 import { CircuitOverview } from '../illus/circuit';
@@ -23,7 +23,7 @@ export function More() {
     ['/timeline', 'clock', 'Timeline', 'Everything that was done, by who and when'],
     ['/van', 'van', 'Van facts', 'VIN, mileage, what’s been done, SAM label'],
     ['/summary', 'copy', 'Copy summary / print', 'Plain text for Claude or a mechanic'],
-    ['/share', 'share', 'Invite & people', 'Private link for helpers'],
+    ['/share', 'share', 'Share the app', 'Send the link to whoever is helping'],
     ['/settings', 'user', 'Settings', 'Your name, dark mode, install, export'],
   ];
   return (
@@ -221,74 +221,23 @@ function FactSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-interface Invite { id: string; label: string; created_at: number; revoked_at: number | null }
-interface MemberRow { id: string; display_name: string; role: string; last_seen: number; invite_label: string }
-
 export function Share() {
   useStore();
-  const [invites, setInvites] = useState<Invite[]>([]);
-  const [members, setMembers] = useState<MemberRow[]>([]);
-  const [label, setLabel] = useState('Dad');
-  const [fresh, setFresh] = useState<string>('');
-  const [err, setErr] = useState('');
-  const owner = status.me?.role === 'owner';
-  const load = async () => {
-    try {
-      setMembers((await api<{ members: MemberRow[] }>('/api/members')).members);
-      if (owner) setInvites((await api<{ invites: Invite[] }>('/api/invites')).invites);
-    } catch (e) { setErr((e as Error).message); }
-  };
-  useEffect(() => { if (!DEMO) load(); }, []);
-  if (DEMO) return (<div class="anim-in"><PageHead title="Invite & people" back="#/more" /><div class="empty">Demo mode keeps everything on this device. Deploy the app to Cloudflare to share a private link.</div></div>);
-  const create = async () => {
-    try {
-      const r = await api<{ token: string }>('/api/invites', { method: 'POST', body: JSON.stringify({ label }) });
-      setFresh(`${location.origin}/#/join/${r.token}`);
-      load();
-    } catch (e) { setErr((e as Error).message); }
-  };
-  const revoke = async (id: string) => {
-    if (!await ask('Revoke this link? Anyone who joined with it is signed out on their next request.')) return;
-    await api(`/api/invites/${id}/revoke`, { method: 'POST' });
-    load();
-  };
+  const url = `${location.origin}/`;
+  if (DEMO) return (<div class="anim-in"><PageHead title="Share the app" back="#/more" /><div class="empty">Demo mode keeps everything on this device. The deployed app has a link you can share.</div></div>);
   return (
     <div class="anim-in">
-      <PageHead title="Invite & people" back="#/more" />
-      {err && <div class="caveat" style="margin-top:10px">{err}</div>}
-      {owner && (
-        <section class="section">
-          <div class="card">
-            <h3>Make a private invite link</h3>
-            <p class="small muted">Anyone with the link can join. No passwords. You can revoke it any time.</p>
-            <label class="field"><span>Who is it for?</span><input class="input" value={label} onInput={(e) => setLabel((e.target as HTMLInputElement).value)} /></label>
-            <button type="button" class="btn primary block" style="margin-top:12px" onClick={create}><Icon name="link" />Create link</button>
-            {fresh && (
-              <div style="margin-top:12px">
-                <div class="kicker">Send this link (shown once)</div>
-                <input class="input" readOnly value={fresh} onFocus={(e) => (e.target as HTMLInputElement).select()} />
-                <div class="btn-row" style="margin-top:8px">
-                  <button type="button" class="btn" onClick={() => navigator.clipboard.writeText(fresh).then(() => toast('Link copied'))}><Icon name="copy" />Copy</button>
-                  {'share' in navigator && <button type="button" class="btn" onClick={() => navigator.share({ title: 'Van Fix', text: 'Join the van repair tracker', url: fresh }).catch(() => {})}><Icon name="share" />Share</button>}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-      <section class="section">
-        <div class="section-head"><h2>People</h2></div>
-        <div class="stack">{members.map((m) => <div class="item"><Icon name="user" class="chev" /><span class="grow"><b>{m.display_name}</b> <span class="small muted">({m.role})</span><br /><span class="small muted">seen {ago(m.last_seen)} · via {m.invite_label}</span></span></div>)}</div>
+      <PageHead title="Share the app" back="#/more" />
+      <section class="section card">
+        <h3>Send this link</h3>
+        <p class="small muted">Anyone who opens it can use the app right away. They type their name once, and everything syncs between phones.</p>
+        <input class="input" readOnly value={url} onFocus={(e) => (e.target as HTMLInputElement).select()} style="margin-top:8px" />
+        <div class="btn-row" style="margin-top:10px">
+          <button type="button" class="btn" onClick={() => navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast('Select the link above to copy it'))}><Icon name="copy" />Copy</button>
+          {'share' in navigator && <button type="button" class="btn primary" onClick={() => navigator.share({ title: 'Van Fix', text: 'Sprinter repair tracker', url }).catch(() => {})}><Icon name="share" />Share</button>}
+        </div>
       </section>
-      {owner && invites.length > 0 && (
-        <section class="section">
-          <div class="section-head"><h2>Links</h2></div>
-          <div class="stack">{invites.map((i) => (
-            <div class="item"><Icon name="link" class="chev" /><span class="grow"><b>{i.label}</b><br /><span class="small muted">{i.revoked_at ? `revoked ${ago(i.revoked_at)}` : `created ${ago(i.created_at)}`}</span></span>
-              {!i.revoked_at && <button type="button" class="btn danger sm" onClick={() => revoke(i.id)}>Revoke</button>}</div>
-          ))}</div>
-        </section>
-      )}
+      <div class="caveat" style="margin-top:16px"><Icon name="info" /><span>The app has no accounts, so anyone with the link can see and add readings. Only share it with people helping on the van.</span></div>
     </div>
   );
 }
@@ -320,9 +269,9 @@ export function Settings() {
   const saveName = async () => {
     const n = name.trim();
     if (!n) return;
-    if (DEMO) { await idbPut('meta', 'demoName', n); status.me = { ...status.me!, display_name: n }; toast('Name saved'); return; }
-    try { const r = await api<{ member: any }>('/api/me', { method: 'POST', body: JSON.stringify({ name: n }) }); status.me = r.member; await idbPut('meta', 'me', r.member); toast('Name saved'); }
-    catch (e) { toast((e as Error).message); }
+    if (DEMO) { await idbPut('meta', 'demoName', n); status.me = { display_name: n }; toast('Name saved'); return; }
+    await saveMyName(n);
+    toast('Name saved');
   };
   const exportAll = () => {
     const blob = new Blob([JSON.stringify({ exported_at: new Date().toISOString(), records: allRecords() }, null, 1)], { type: 'application/json' });
@@ -355,17 +304,6 @@ export function Settings() {
         <p class="small muted">Download everything (readings, notes, codes, suspects) as a JSON file.</p>
         {DEMO ? <p class="small">Export is available in the installed app.</p> : <button type="button" class="btn block" onClick={exportAll}><Icon name="download" />Export all data</button>}
       </section>
-      {!DEMO && (
-        <section class="section">
-          <button type="button" class="btn danger block" onClick={async () => {
-            if (!await ask('Sign out on this phone? Unsynced changes on this phone will be lost. You will need the invite link again.')) return;
-            await api('/api/logout', { method: 'POST' }).catch(() => {});
-            await idbClear();
-            location.hash = '#/';
-            location.reload();
-          }}>Sign out on this phone</button>
-        </section>
-      )}
     </div>
   );
 }

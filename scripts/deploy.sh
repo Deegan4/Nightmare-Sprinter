@@ -7,9 +7,3 @@ set -euo pipefail
 npm run build
 npx wrangler d1 migrations apply van-fix --remote
 npx wrangler deploy
-if ! npx wrangler secret list 2>/dev/null | grep -q OWNER_KEY; then
-  KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))")
-  printf '%s' "$KEY" | npx wrangler secret put OWNER_KEY
-  echo "OWNER_KEY created. It is saved ONLY in ./owner-key.txt (git-ignored): open /#/setup and enter it."
-  printf '%s\n' "$KEY" > owner-key.txt
-fi

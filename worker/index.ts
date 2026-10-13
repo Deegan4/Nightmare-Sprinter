@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import type { Rec } from '../shared/types';
 import { seedRecords } from '../shared/seed';
 
@@ -8,30 +7,15 @@ export interface Env {
   /** Optional: without R2, files are stored in D1 (blob_chunks). */
   BUCKET?: R2Bucket;
   ASSETS: Fetcher;
-  OWNER_KEY?: string;
+  /** Set to "1" to serve the manual page images. Off by default: the app is open to anyone with the URL,
+   *  and the third-party workshop manuals must not be published. */
+  SERVE_MANUALS?: string;
 }
-interface Member { id: string; display_name: string; role: 'owner' | 'collaborator' }
-type Ctx = { Bindings: Env; Variables: { member: Member } };
+type Ctx = { Bindings: Env };
 
-const COOKIE = 'vf_session';
 const KINDS = new Set(['vehicle', 'fact', 'step', 'reading', 'rule', 'suspect', 'evidence', 'fault_code', 'reference_page', 'zone', 'photo', 'note', 'event', 'fuse']);
 const MAX_PHOTO = 8 * 1024 * 1024;
 
-const enc = new TextEncoder();
-export async function sha256(s: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', enc.encode(s));
-  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-export function randomToken(bytes = 32): string {
-  const a = crypto.getRandomValues(new Uint8Array(bytes));
-  return btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function timingSafeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return d === 0;
-}
 
 /** Insert any seed records that are missing (new seed content reaches existing installs; edits are never overwritten). */
 async function ensureSeeded(db: D1Database) {
@@ -69,18 +53,6 @@ async function rateLimited(c: any, limit = 20): Promise<boolean> {
   return (row?.n ?? 0) > limit;
 }
 
-async function startSession(c: any, inviteId: string, name: string, role: string) {
-  const session = randomToken();
-  const id = crypto.randomUUID();
-  const now = Date.now();
-  await c.env.DB.prepare('INSERT INTO members (id, display_name, role, invite_id, session_hash, created_at, last_seen) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .bind(id, name, role, inviteId, await sha256(session), now, now).run();
-  setCookie(c, COOKIE, session, { httpOnly: true, secure: true, sameSite: 'Strict', path: '/', maxAge: 60 * 60 * 24 * 365 });
-  return { id, display_name: name, role };
-}
-
-const cleanName = (s: unknown) => String(s ?? '').trim().slice(0, 40);
-
 // Create tables on first use, so a fresh deploy works even if migrations were never run.
 // Mirrors migrations/0001_init.sql (all statements are idempotent).
 const SCHEMA = [
@@ -89,8 +61,6 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS records_kind ON records(vehicle_id, kind)',
   'CREATE TABLE IF NOT EXISTS counter (name TEXT PRIMARY KEY, value INTEGER NOT NULL)',
   "INSERT OR IGNORE INTO counter (name, value) VALUES ('seq', 0)",
-  'CREATE TABLE IF NOT EXISTS invites (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, label TEXT NOT NULL, role TEXT NOT NULL, created_at INTEGER NOT NULL, revoked_at INTEGER)',
-  'CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, display_name TEXT NOT NULL, role TEXT NOT NULL, invite_id TEXT NOT NULL, session_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, last_seen INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0)',
   'CREATE TABLE IF NOT EXISTS rate (ip TEXT NOT NULL, win INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (ip, win))',
   'CREATE TABLE IF NOT EXISTS blob_chunks (key TEXT NOT NULL, idx INTEGER NOT NULL, content_type TEXT NOT NULL, data BLOB NOT NULL, PRIMARY KEY (key, idx))',
 ];
@@ -131,70 +101,10 @@ app.use('*', async (c, next) => {
   c.header('Cache-Control', c.res.headers.get('Cache-Control') ?? 'no-store');
 });
 
-// ---------- public (no session) ----------
-app.post('/api/setup', async (c) => {
-  if (await rateLimited(c, 10)) return c.json({ error: 'Too many tries. Wait 10 minutes.' }, 429);
-  const { key, name } = await c.req.json().catch(() => ({}));
-  if (!c.env.OWNER_KEY || !key || !timingSafeEqual(await sha256(String(key)), await sha256(c.env.OWNER_KEY))) {
-    return c.json({ error: 'Owner key is not right.' }, 403);
-  }
-  if (!cleanName(name)) return c.json({ error: 'Enter your name.' }, 400);
-  let owner = await c.env.DB.prepare("SELECT id FROM invites WHERE role = 'owner' AND revoked_at IS NULL LIMIT 1").first<{ id: string }>();
-  if (!owner) {
-    owner = { id: crypto.randomUUID() };
-    await c.env.DB.prepare('INSERT INTO invites (id, token_hash, label, role, created_at) VALUES (?, ?, ?, ?, ?)')
-      .bind(owner.id, await sha256(randomToken()), 'Owner setup', 'owner', Date.now()).run();
-  }
-  await ensureSeeded(c.env.DB);
-  return c.json({ member: await startSession(c, owner.id, cleanName(name), 'owner') });
-});
-
-app.post('/api/join', async (c) => {
-  if (await rateLimited(c)) return c.json({ error: 'Too many tries. Wait 10 minutes.' }, 429);
-  const { token, name } = await c.req.json().catch(() => ({}));
-  if (!token) return c.json({ error: 'This link is missing its code.' }, 400);
-  const inv = await c.env.DB.prepare('SELECT id, role, revoked_at FROM invites WHERE token_hash = ?')
-    .bind(await sha256(String(token))).first<{ id: string; role: string; revoked_at: number | null }>();
-  if (!inv || inv.revoked_at) return c.json({ error: 'This invite link is not valid any more. Ask Kollin for a new one.' }, 403);
-  if (!cleanName(name)) return c.json({ error: 'Enter your name.' }, 400);
-  await ensureSeeded(c.env.DB);
-  return c.json({ member: await startSession(c, inv.id, cleanName(name), inv.role === 'owner' ? 'owner' : 'collaborator') });
-});
-
-// ---------- session required ----------
-app.use('/api/*', async (c, next) => {
-  const token = getCookie(c, COOKIE);
-  if (!token) return c.json({ error: 'signed_out' }, 401);
-  const m = await c.env.DB.prepare(
-    `SELECT m.id, m.display_name, m.role, m.last_seen FROM members m JOIN invites i ON i.id = m.invite_id
-     WHERE m.session_hash = ? AND m.revoked = 0 AND i.revoked_at IS NULL`,
-  ).bind(await sha256(token)).first<Member & { last_seen: number }>();
-  if (!m) {
-    deleteCookie(c, COOKIE, { path: '/' });
-    return c.json({ error: 'signed_out' }, 401);
-  }
-  if (Date.now() - m.last_seen > 60_000) {
-    c.executionCtx.waitUntil(c.env.DB.prepare('UPDATE members SET last_seen = ? WHERE id = ?').bind(Date.now(), m.id).run());
-  }
-  c.set('member', { id: m.id, display_name: m.display_name, role: m.role });
+// Open app: no accounts. Writes are rate-limited per IP so a stray script can't flood the database.
+app.on(['POST', 'PUT'], '/api/*', async (c, next) => {
+  if (await rateLimited(c, 600)) return c.json({ error: 'Too many changes from this connection. Try again in a few minutes.' }, 429);
   await next();
-});
-
-const ownerOnly = async (c: any, next: any) => (c.get('member').role === 'owner' ? next() : c.json({ error: 'Owner only' }, 403));
-
-app.get('/api/me', (c) => c.json({ member: c.get('member') }));
-
-app.post('/api/me', async (c) => {
-  const name = cleanName((await c.req.json().catch(() => ({}))).name);
-  if (!name) return c.json({ error: 'Enter a name' }, 400);
-  await c.env.DB.prepare('UPDATE members SET display_name = ? WHERE id = ?').bind(name, c.get('member').id).run();
-  return c.json({ member: { ...c.get('member'), display_name: name } });
-});
-
-app.post('/api/logout', async (c) => {
-  await c.env.DB.prepare('UPDATE members SET revoked = 1 WHERE id = ?').bind(c.get('member').id).run();
-  deleteCookie(c, COOKIE, { path: '/' });
-  return c.json({ ok: true });
 });
 
 app.get('/api/sync', async (c) => {
@@ -216,7 +126,7 @@ app.post('/api/push', async (c) => {
   for (const r of recs) {
     r.updated_at = Math.min(r.updated_at, now + 60_000);
     r.created_at = Math.min(r.created_at ?? now, now + 60_000);
-    r.created_by = r.created_by || c.get('member').display_name;
+    r.created_by = String(r.created_by || 'Someone').slice(0, 40);
     r.vehicle_id = r.vehicle_id || 'v1';
   }
   const seq = await upsert(c.env.DB, recs);
@@ -247,47 +157,10 @@ async function serveObject(c: any, key: string) {
 }
 app.get('/api/photos/:id', (c) => serveObject(c, `photos/${c.req.param('id')}.jpg`));
 app.get('/api/ref-image/*', (c) => {
+  if (c.env.SERVE_MANUALS !== '1') return c.json({ error: 'Manual pages are not published on the open app.' }, 403);
   const key = c.req.path.slice('/api/ref-image/'.length);
   if (!/^ref\/[\w./-]+$/.test(key) || key.includes('..')) return c.json({ error: 'bad key' }, 400);
   return serveObject(c, key);
-});
-
-// Owner can upload manual page images through the app (used when there is no R2 bucket).
-app.put('/api/ref-image/*', ownerOnly, async (c) => {
-  const key = c.req.path.slice('/api/ref-image/'.length);
-  if (!/^ref\/[\w./-]+$/.test(key) || key.includes('..')) return c.json({ error: 'bad key' }, 400);
-  const body = await c.req.arrayBuffer();
-  if (body.byteLength > 12 * 1024 * 1024) return c.json({ error: 'too large' }, 413);
-  await putFile(c.env, key, body, c.req.header('content-type') ?? 'image/png');
-  return c.json({ ok: true });
-});
-
-app.get('/api/members', async (c) => {
-  const { results } = await c.env.DB.prepare(
-    `SELECT m.id, m.display_name, m.role, m.last_seen, i.label AS invite_label FROM members m JOIN invites i ON i.id = m.invite_id
-     WHERE m.revoked = 0 AND i.revoked_at IS NULL ORDER BY m.last_seen DESC`,
-  ).all();
-  return c.json({ members: results });
-});
-
-app.get('/api/invites', ownerOnly, async (c) => {
-  const { results } = await c.env.DB.prepare("SELECT id, label, created_at, revoked_at FROM invites WHERE role <> 'owner' ORDER BY created_at DESC").all();
-  return c.json({ invites: results });
-});
-
-app.post('/api/invites', ownerOnly, async (c) => {
-  const label = cleanName((await c.req.json().catch(() => ({}))).label) || 'Invite';
-  const token = randomToken();
-  const id = crypto.randomUUID();
-  await c.env.DB.prepare('INSERT INTO invites (id, token_hash, label, role, created_at) VALUES (?, ?, ?, ?, ?)')
-    .bind(id, await sha256(token), label, 'collaborator', Date.now()).run();
-  // The raw token is only ever returned once; only its hash is stored.
-  return c.json({ id, label, token });
-});
-
-app.post('/api/invites/:id/revoke', ownerOnly, async (c) => {
-  await c.env.DB.prepare("UPDATE invites SET revoked_at = ? WHERE id = ? AND role <> 'owner'").bind(Date.now(), c.req.param('id')).run();
-  return c.json({ ok: true });
 });
 
 async function exportAll(db: D1Database) {

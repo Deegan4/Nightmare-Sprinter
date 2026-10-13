@@ -1,12 +1,12 @@
 # Van Fix (Sprinter repair tracker)
 
-Private, mobile-first PWA for diagnosing ONE 2012 Sprinter 2500 (horn, A/C compressor and
+Open (no accounts), mobile-first PWA for diagnosing ONE 2012 Sprinter 2500 (horn, A/C compressor and
 trailer lights all dead). Spec: the PRD in the first PR description / README.
 
 ## Commands
 - `npm install`
 - `npm run dev` – Vite on :5173 (proxies `/api` to wrangler on :8787)
-- `npm run dev:worker` – `wrangler dev` (serves `dist/` + API with local D1/R2). Needs `.dev.vars` with `OWNER_KEY=...`
+- `npm run dev:worker` – `wrangler dev` (serves `dist/` + API with local D1/R2). No secrets needed
 - `npm run db:migrate:local` / `npm run db:migrate:remote`
 - `npm run build` – web build into `dist/` (also emits `sw.js`)
 - `npm run build:demo` – device-only demo build (no server, `VITE_DEMO=1`) into `dist-demo/`
@@ -17,7 +17,7 @@ trailer lights all dead). Spec: the PRD in the first PR description / README.
 
 ## Layout
 - `shared/` – types, seed content (from the PRD), rule engine, copy-summary builder. Used by worker and web.
-- `worker/index.ts` – Hono API on Cloudflare Workers, D1 (`records`, `invites`, `members`, `rate`), R2 (photos, reference images, nightly backups).
+- `worker/index.ts` – Hono API on Cloudflare Workers, D1 (`records`, `rate`, `blob_chunks`), R2 if bound (photos, reference images, nightly backups); otherwise files go to D1 `blob_chunks`. No auth: anyone with the URL can use it; writes are rate-limited per IP.
 - `src/` – Preact SPA. `lib/` store/sync/IndexedDB, `screens/`, `illus/` (all SVG drawings), `components/`.
 - `migrations/` – D1 SQL.
 
@@ -49,10 +49,11 @@ Also used: "Equipment & Instructions.pdf" (battery G1 under driver-footwell floo
 switches), "Wiring Diagrams - Body.pdf" Fig. 6 (turn signal over CAN B to N28/1), "Wiring Diagrams.pdf" Fig. 29
 (compressor A9 pin 1 BU/GN → X26/38 pin 7 → X18/56 pin 23 → S98 pin 5). "Testing & Repair - Body" and
 "Wheels..." had nothing relevant. Seeded fuses/facts cite the figure they came from. `scripts/load-manual-pages.sh` uploads all Library pages.
-- Manual PDFs/images are private: never commit them (`reference-source/` is git-ignored), never serve them publicly.
+- Manual PDFs/images are third-party: never commit them (`reference-source/` is git-ignored). The open app does not serve them:
+  `/api/ref-image/*` returns 403 unless the deployment sets `SERVE_MANUALS=1` (only for a private deployment).
   Everything sends `noindex`; `robots.txt` disallows all.
 
 ## Open-question defaults chosen
-- Names: display name entered at join (per person), roles owner/collaborator.
+- Names: each phone enters a display name once (stored locally, sent as `created_by`). No accounts, invites or roles.
 - TOPDON report: stored as a REPORTED fact + codes; scanner screens can be attached as photos to codes.
 - "Ask for help" email button: skipped in v1 (use Copy summary).

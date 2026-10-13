@@ -5,7 +5,6 @@ import { chromium, devices } from 'playwright';
 import assert from 'node:assert/strict';
 
 const BASE = process.env.BASE ?? 'http://127.0.0.1:8787';
-const KEY = process.env.OWNER_KEY ?? 'local-owner-key';
 const SHOTS = process.argv[2];
 const log = (...a) => console.log('•', ...a);
 
@@ -16,24 +15,16 @@ const K = await kollin.newPage();
 const D = await dad.newPage();
 const shot = async (p, name) => SHOTS && p.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false });
 
-// --- owner setup
-await K.goto(`${BASE}/#/setup`);
-await K.fill('input[type=password]', KEY);
+// --- open app: no accounts, each phone just enters a name once
+await K.goto(`${BASE}/`);
 await K.fill('input[placeholder="e.g. Dad"]', 'Kollin');
 await K.click('button[type=submit]');
 await K.locator('#next-title').waitFor();
-log('owner set up, seed loaded, next step visible');
+log('Kollin opened the app, seed loaded, next step visible');
 
-// --- invite link
-await K.goto(`${BASE}/#/share`);
-await K.getByRole('button', { name: 'Create link' }).click();
-const link = await K.locator('input[readonly]').inputValue();
-assert.match(link, /#\/join\/[\w-]{30,}/);
-log('invite link created');
-
-// --- AT1: Dad joins on Android, adds a reading + photo quickly
+// --- AT1: Dad opens the shared link on Android, adds a reading + photo quickly
 const t0 = Date.now();
-await D.goto(link);
+await D.goto(`${BASE}/`);
 await D.fill('input[placeholder="e.g. Dad"]', 'Dad');
 await D.click('button[type=submit]');
 const heroTitle = D.locator('#next-title');
@@ -58,7 +49,7 @@ await D.fill('.sheet input.input', 'Seat base ground');
 await D.getByRole('button', { name: 'Save photo' }).click();
 await D.getByText(/Saved/).first().waitFor();
 const dadSecs = (Date.now() - t0) / 1000;
-log(`AT1 Dad joined + reading + photo in ${dadSecs.toFixed(1)}s (automated)`);
+log(`AT1 Dad opened the app + reading + photo in ${dadSecs.toFixed(1)}s (automated)`);
 const t1 = Date.now();
 await K.goto(`${BASE}/#/`);
 await K.getByText('Seat-base ground W71/3 drop').first().waitFor({ timeout: 12000 });
@@ -117,14 +108,10 @@ const n = await cards.count();
 for (let i = 0; i < n; i++) { const t = await cards.nth(i).innerText(); assert.ok(/Source · unverified/i.test(t) && /\.com|\.pdf/.test(t), `ref ${i} shows provenance + source`); }
 log(`AT4 ${n} reference pages show provenance + source`);
 
-// --- AT6: revoke Dad's link
-await K.goto(`${BASE}/#/share`);
-await K.getByRole('button', { name: 'Revoke' }).first().click();
-await K.getByRole('button', { name: 'Yes' }).click();
-await K.getByText(/revoked/).first().waitFor();
-await D.reload();
-await D.getByText(/signed out|Private app/i).first().waitFor({ timeout: 8000 });
-log('AT6 revoked member is signed out on next request');
+// --- Manual pages are not published on the open app
+const refStatus = await K.evaluate(async () => (await fetch('/api/ref-image/ref/ref-horn/page-42.png')).status);
+assert.equal(refStatus, 403, 'manual pages are not served publicly');
+log('manual page images are not served on the open app');
 
 await browser.close();
 console.log('\nALL ACCEPTANCE CHECKS PASSED');

@@ -91,9 +91,8 @@ export function App() {
   useStore();
   const r = useRoute();
   const [, force] = useState(0);
-  const gated = status.auth === 'loading' || status.auth === 'out' || status.auth === 'revoked'
-    || ((r[0] === 'join' || r[0] === 'setup') && status.auth !== 'demo');
-  if (gated) return <Gate route={r} />;
+  if (status.auth === 'loading' || status.auth === 'needsName') return <Gate />;
+  if (r[0] === 'join' || r[0] === 'setup') { location.replace('#/'); return null; } // old invite links
   const tab = TAB_OF[r[0] ?? ''] ?? r[0] ?? '';
   return (
     <>

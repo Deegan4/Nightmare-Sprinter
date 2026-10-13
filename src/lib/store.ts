@@ -3,8 +3,9 @@ import type { Kind, Rec } from '../../shared/types';
 import { VEHICLE_ID } from '../../shared/seed';
 import { idbAll, idbKeys, idbPut, idbPutMany } from './idb';
 
-export interface Me { id: string; display_name: string; role: 'owner' | 'collaborator' | 'demo' }
-export type Auth = 'loading' | 'in' | 'out' | 'revoked' | 'demo';
+export interface Me { display_name: string }
+/** 'needsName' = first visit on this phone: ask who is using it. No accounts. */
+export type Auth = 'loading' | 'in' | 'needsName' | 'demo';
 export interface Status { auth: Auth; me: Me | null; online: boolean; pending: number; syncing: boolean; lastSync: number; error: string; uploads: Record<string, number> }
 
 const records = new Map<string, Rec>();

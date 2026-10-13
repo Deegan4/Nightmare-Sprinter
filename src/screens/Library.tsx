@@ -14,11 +14,14 @@ function Caveat({ text }: { text: string }) {
   return <div class="caveat" role="note"><Icon name="warn" /><span>{text}</span></div>;
 }
 
-function Placeholder() {
+// Manual page images are only served when the deployment enables them (they are third-party manuals).
+let manualsBlocked = false;
+function Placeholder({ blocked }: { blocked?: boolean }) {
   return (
     <div class="illus" style="aspect-ratio:4/3;display:grid;place-items:center;text-align:center;padding:16px">
-      <div style="color:var(--il-ink)"><Icon name="book" class="chev" /><div class="small" style="font-weight:700">Page image not uploaded yet</div>
-        <div class="small" style="opacity:.8">Run scripts/pdf-to-images with the private PDFs</div></div>
+      <div style="color:var(--il-ink);max-width:280px"><span class="ph-ico"><Icon name="book" /></span>
+        <div class="small" style="font-weight:700">{blocked ? 'Manual page not shown on the open app' : 'Page image not uploaded yet'}</div>
+        <div class="small" style="opacity:.8">{blocked ? 'Use the figure number and source below to find it in your own copy of the manual.' : 'Run scripts/pdf-to-images with the PDFs'}</div></div>
     </div>
   );
 }
@@ -38,7 +41,7 @@ export function Library({ tag }: { tag?: string }) {
       <div class="stack">
         {list.map((r) => (
           <a class="item" href={href(`/ref/${r.id}`)} style="align-items:flex-start">
-            <span class="thumb">{r.data.image_key ? <img src={imgUrl(r.data.image_key)} alt="" loading="lazy" style="aspect-ratio:3/4;object-fit:cover" /> : <span style="display:grid;place-items:center;aspect-ratio:3/4;background:var(--il-bg);color:var(--il-ink)"><Icon name="book" class="chev" /></span>}</span>
+            <span class="thumb">{r.data.image_key && !manualsBlocked ? <img src={imgUrl(r.data.image_key)} alt="" loading="lazy" style="aspect-ratio:3/4;object-fit:cover" onError={(e) => { manualsBlocked = true; (e.target as HTMLImageElement).style.visibility = 'hidden'; }} /> : <span style="display:grid;place-items:center;aspect-ratio:3/4;background:var(--il-bg);color:var(--il-ink)"><Icon name="book" class="chev" /></span>}</span>
             <span class="grow">
               <h3>{r.data.title}</h3>
               <span class="small muted">{r.data.figure} · {r.data.source_name}</span>
@@ -55,6 +58,7 @@ export function Library({ tag }: { tag?: string }) {
 export function RefDetail({ id }: { id: string }) {
   useStore();
   const [full, setFull] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState(manualsBlocked);
   const r = get<ReferencePage>(id);
   if (!r) return <div class="empty">Not found. <a href="#/library">Back</a></div>;
   const d = r.data;
@@ -65,15 +69,15 @@ export function RefDetail({ id }: { id: string }) {
         <div class="row" style="margin-top:8px"><Prov p={d.provenance} onChange={(p) => patch<ReferencePage>(id, { provenance: p })} /><span class="small muted">Source: {d.source_name}</span></div>
       </PageHead>
       <div style="margin:12px 0"><Caveat text={d.caveat} /></div>
-      {keys.length ? keys.map((k, i) => (
+      {keys.length && !blocked ? keys.map((k, i) => (
         <div style="margin-top:12px">
           {keys.length > 1 && <div class="kicker">Page {i + 1} of {keys.length}</div>}
           <button type="button" style="all:unset;display:block;cursor:zoom-in;width:100%" onClick={() => setFull(k)} aria-label={`Open page ${i + 1} full size`}>
-            <img src={imgUrl(k)} alt={`${d.title}, ${d.figure}, page ${i + 1}`} loading="lazy" style="border-radius:12px;border:2px solid var(--line);background:#fff;width:100%" />
+            <img src={imgUrl(k)} alt={`${d.title}, ${d.figure}, page ${i + 1}`} loading="lazy" onError={() => { manualsBlocked = true; setBlocked(true); }} style="border-radius:12px;border:2px solid var(--line);background:#fff;width:100%" />
           </button>
           <button type="button" class="btn primary block" style="margin-top:10px" onClick={() => setFull(k)}><Icon name="expand" />Open full size (pinch to zoom)</button>
         </div>
-      )) : <Placeholder />}
+      )) : <Placeholder blocked={blocked} />}
       <section class="section">
         <div class="card">
           <div class="kicker">How to read this page</div>

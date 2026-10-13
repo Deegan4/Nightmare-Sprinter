@@ -21,4 +21,4 @@ bucket_name = "van-fix"
 [triggers]
 crons = ["17 9 * * *"] # nightly JSON backup to R2 (09:17 UTC)
 
-# Secrets (set with `wrangler secret put`): OWNER_KEY
+# Optional var: SERVE_MANUALS = "1" serves manual page images (only for a private deployment).

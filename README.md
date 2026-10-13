@@ -12,7 +12,7 @@
 </p>
 
 <p align="center"><b>Two phones. One van. No guessing.</b><br>
-A private, installable web app that Kollin (iPhone) and his dad (Android) use side by side in the driveway to track down why a 2012 Freightliner Sprinter's <b>horn, A/C compressor and trailer lights</b> all stopped at the same time.</p>
+An installable web app that Kollin (iPhone) and his dad (Android) use side by side in the driveway to track down why a 2012 Freightliner Sprinter's <b>horn, A/C compressor and trailer lights</b> all stopped at the same time.</p>
 
 ---
 
@@ -47,7 +47,7 @@ Everything on one page: component locations, power and control flow, fuse tables
 | **Readings** | Value, unit (V, mV, Ω, A, psi, °F) and test condition in a few taps. Compared against editable rules such as "ground drop ≤ 0.2 V". The wording is always *meets / does not meet the rule*, never *the part is bad*. |
 | **Suspects** | SAM, shared grounds, SAM power feed, A/C circuit and CAN network, each with evidence for and against and "what would change my mind". |
 | **Fault codes** | The 2026-10-09 TOPDON scan, editable, with a "write it down before you clear it" guard. |
-| **Library** | 51 manual pages (horn, trailer, A/C, power distribution, grounds, fuse box, battery, connectors) with pinch-zoom on both iOS and Android. Private to invited members. |
+| **Library** | 51 manual pages (horn, trailer, A/C, power distribution, grounds, fuse box, battery, connectors) with pinch-zoom on both iOS and Android. Off on the open app (third-party manuals); turn on with `SERVE_MANUALS=1` for a private deployment. |
 | **Photos with markers** | Photograph an area, tap where each part is, and the location becomes CONFIRMED everywhere it's shown. |
 | **Timeline** | Who measured what and when, filterable by person or type. |
 | **Copy summary** | Plain-text summary with every label, ready to paste to Claude or a mechanic. Printable for a shop visit. |
@@ -77,8 +77,8 @@ flowchart LR
     S["Service worker<br/>offline shell"]
   end
   subgraph CF["Cloudflare"]
-    W["Worker (Hono)<br/>invite-link auth · sync"]
-    D[("D1<br/>records, members")]
+    W["Worker (Hono)<br/>sync · file storage"]
+    D[("D1<br/>records")]
     F[("R2 or D1 chunks<br/>photos · manual pages · backups")]
   end
   A & B --> App
@@ -89,16 +89,15 @@ flowchart LR
 
 - **Offline-first.** Every write lands on the phone first, then syncs. Client-made IDs and last-write-wins mean retries never duplicate anything.
 - **One table for everything.** Each step, reading, suspect and photo is a row in `records`. Sequence numbers are assigned inside the same D1 transaction, so a phone never misses an update.
-- **Invite links, no passwords.** The owner makes a link; anyone holding it joins with just a name. Tokens are stored hashed, and revoking a link signs those people out.
-- **Private by default.** Every response sends `noindex`, `robots.txt` blocks everything, and manual pages are only served to signed-in members.
+- **No accounts.** Open the link, type your name once on each phone, and start. Writes are rate-limited per connection.
+- **Not indexed, manuals not published.** Every response sends `noindex`, `robots.txt` blocks everything, and manual page images are only served when `SERVE_MANUALS=1` is set.
 - **Storage that adapts.** Files go to R2 when a bucket is bound, otherwise into D1 in 1 MB chunks. Photos are shrunk to 1600 px on the phone before upload.
 
 ## Run it
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars        # OWNER_KEY=something-long
-npm run build && npm run dev:worker   # http://127.0.0.1:8787/#/setup
+npm run build && npm run dev:worker   # http://127.0.0.1:8787
 ```
 
 | Command | What it does |
@@ -111,7 +110,7 @@ npm run build && npm run dev:worker   # http://127.0.0.1:8787/#/setup
 
 ### Deploy
 
-- **Your account:** `npx wrangler login && ./scripts/deploy.sh`. This builds, migrates D1, deploys and creates an owner key.
+- **Your account:** `npx wrangler login && ./scripts/deploy.sh`. This builds, migrates D1 and deploys.
 - **No login:** `npx wrangler deploy --temporary -c wrangler.temporary.toml` gives a live URL plus a claim link valid for 60 minutes.
 - **Manual pages:** put the PDFs in `reference-source/` (git-ignored) and run `scripts/load-manual-pages.sh --remote`. Add `STORAGE=d1` when there's no R2 bucket.
 
@@ -136,6 +135,6 @@ tests/      unit + two-phone end-to-end acceptance tests
 
 ## A note on the manuals
 
-The wiring and fuse references come from third-party Sprinter 906 workshop manuals the owner already has. They are **not** in this repository and never served publicly. Drawings in the app are tagged *approximate* or *concept* unless they cite a manual figure, and nothing invents fuse numbers, pinouts or wire colours.
+The wiring and fuse references come from third-party Sprinter 906 workshop manuals the owner already has. They are **not** in this repository, and the open app does not serve them. Drawings in the app are tagged *approximate* or *concept* unless they cite a manual figure, and nothing invents fuse numbers, pinouts or wire colours.
 
 <p align="center"><sub>Built for one van and two people. See <a href="CLAUDE.md">CLAUDE.md</a> for the data model and the hard rules.</sub></p>
