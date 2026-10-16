@@ -5,6 +5,8 @@ import type { Photo } from '../../shared/types';
 import { Icon } from '../components/icons';
 import { Chips, PageHead, Prov } from '../components/ui';
 import { LAYERS, LAYER_COLOR, XLINKS, XNODES, XrayVan, type Layer, type XNode } from '../illus/xray';
+import { FindB12 } from '../illus/find-b12';
+import { openSheet } from './sheets';
 import { href } from '../lib/router';
 import { list, useStore } from '../lib/store';
 
@@ -93,6 +95,12 @@ export function Xray() {
         </section>
       ) : <p class="muted">Tap any part on the drawing.</p>}
 
+      <section class="section" id="find-b12">
+        <div class="section-head"><h2>Where to find the A/C pressure sensor (B12)</h2></div>
+        <p class="small muted" style="margin:0 0 8px">Manual: “in engine compt” only. Wiring and colours are from Fig. 1 <Prov p="SOURCE" />; the shaded spots are typical places, not manual data.</p>
+        <div class="xr-wrap"><FindB12 /></div>
+        <button type="button" class="btn sm" style="margin-top:10px" onClick={() => openSheet('photo', { caption: 'A/C pressure sensor B12 (3-wire plug on A/C pipe)' })}><Icon name="camera" />Found it: photograph and mark B12</button>
+      </section>
       <section class="section">
         <div class="section-head"><h2>Every part on this view</h2></div>
         <ul class="list stack">
