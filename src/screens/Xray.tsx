@@ -6,6 +6,7 @@ import { Icon } from '../components/icons';
 import { Chips, PageHead, Prov } from '../components/ui';
 import { LAYERS, LAYER_COLOR, XLINKS, XNODES, XrayVan, type Layer, type XNode } from '../illus/xray';
 import { FindB12 } from '../illus/find-b12';
+import { FindRearTurn } from '../illus/find-rear-turn';
 import { openSheet } from './sheets';
 import { href } from '../lib/router';
 import { list, useStore } from '../lib/store';
@@ -95,6 +96,12 @@ export function Xray() {
         </section>
       ) : <p class="muted">Tap any part on the drawing.</p>}
 
+      <section class="section" id="find-rear-turn">
+        <div class="section-head"><h2>Rear turn signals: where it is and how to fix it</h2></div>
+        <p class="small muted" style="margin:0 0 8px">Wiring, pins and colours from Figs. 22-23 <Prov p="SOURCE" />. Places are the manual’s words; exact spots and wire routes are approximate.</p>
+        <div class="xr-wrap"><FindRearTurn /></div>
+        <button type="button" class="btn sm" style="margin-top:10px" onClick={() => openSheet('photo', { caption: 'Tail lamp plug / ground G303 (rear turn signals)' })}><Icon name="camera" />Photograph the tail lamp plug or G303</button>
+      </section>
       <section class="section" id="find-b12">
         <div class="section-head"><h2>Where to find the A/C pressure sensor (B12)</h2></div>
         <p class="small muted" style="margin:0 0 8px">Manual: “in engine compt” only. Wiring and colours are from Fig. 1 <Prov p="SOURCE" />; the shaded spots are typical places, not manual data.</p>
