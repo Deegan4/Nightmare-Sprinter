@@ -1,6 +1,6 @@
 // Driver seat base: what is there for the rear turn signals / trailer problem.
 // Sources: System Wiring Diagram Fig. 23 (additional turn signal control module "under driver's seat", pins, fuse block 4
-// fuse 13 10 A, ground G301); Mercedes 2015 Sprinter fuse supplement (fuse box on the outside of the driver seat base,
+// fuse 13 10 A, ground G301 — the Mercedes F55/1 legend for vans after 4/1/07 puts it on F55/1 fuse 9 10 A); Mercedes 2015 Sprinter fuse supplement (fuse box on the outside of the driver seat base,
 // F55/3 and F55/4, how to open it); Fig. 24 / FG legend (trailer fuses). Positions inside the seat base are APPROXIMATE.
 const INK = '#cfe0ff', DIM = '#5f7fa8', BG = '#0a1220', AMB = '#ffd23f', HOT = '#ff5a4e', PUR = '#c48bff';
 const T = (x: number, y: number, s: string, o: { size?: number; w?: number; anchor?: string; fill?: string } = {}) => (
@@ -48,7 +48,7 @@ export function FindSeat() {
       <path d="M40 385 C 120 470, 340 470, 400 420" stroke="#2fd27a" stroke-width="2.2" fill="none" stroke-dasharray="6 5" />
       {T(26, 376, '← from SAM', { size: 10, w: 700, fill: '#2fd27a' })}
       <path d="M340 395 C 352 395, 356 395, 370 395" stroke="#ff9f1c" stroke-width="2.2" fill="none" />
-      {T(255, 446, 'fuse block 4 · fuse 13 (10 A) → module', { size: 10, anchor: 'middle', w: 700, fill: '#ff9f1c' })}
+      {T(255, 446, 'module fuse: F55/1 fuse 9 (10 A), MAIN box', { size: 10, anchor: 'middle', w: 700, fill: '#ff9f1c' })}
       {/* no relay banner */}
       <g transform="translate(130 100)">
         <rect width="270" height="84" rx="10" fill="#0f1b2d" stroke={HOT} stroke-width="2" />
@@ -61,22 +61,22 @@ export function FindSeat() {
         {T(10, 20, 'OPEN THE FUSE BOX (Mercedes 2015 fuse supplement)', { size: 11.5, fill: AMB })}
         {T(10, 38, 'Raise the seat to its highest position, press both latches down, lift the cover.', { size: 11, w: 600 })}
         {T(10, 58, 'APPROXIMATE: places inside the seat base are a drawing choice. The module is', { size: 10.5, w: 600, fill: '#d1a565' })}
-        {T(10, 72, 'only there on vans with “additional turn signal lamps”. Check your fuse card:', { size: 10.5, w: 600, fill: '#d1a565' })}
-        {T(10, 86, 'the 2015 sheet lists fuse 13 of block 4 differently (fuel pump).', { size: 10.5, w: 600, fill: '#d1a565' })}
+        {T(10, 72, 'only there on vans with “additional turn signal lamps”. Its fuse is in the', { size: 10.5, w: 600, fill: '#d1a565' })}
+        {T(10, 86, 'main box (Mercedes legend after 4/1/07); Fig. 23’s blk 4 f13 is pre-2007.', { size: 10.5, w: 600, fill: '#d1a565' })}
       </g>
 
       {/* ---------- B: fuses + module pins ---------- */}
       <rect x="620" y="16" width="366" height="628" rx="12" fill="#0f1b2d" stroke="#2b4467" stroke-width="1.5" />
       {T(636, 40, 'B · WHAT TO CHECK UNDER THE SEAT', { size: 13, fill: '#9fb3c8' })}
       {T(636, 66, 'FUSES (key on, both sides ~12 V)', { size: 11.5, fill: AMB })}
-      {[['Block 4 · fuse 13', '10 A', 'turn signal module (Fig. 23)'], ['Block 4 · fuse 14', '20 A', 'trailer socket pin 4'], ['Block 4 · fuse 15', '25 A', 'trailer module'], ['Block 3 · fuse 4', '7.5 A', 'trailer module']].map(([a, b, c], i) => (
+      {[['F55/1 · fuse 9 (main box)', '10 A', 'turn signal module (Mercedes legend)'], ['Block 4 · fuse 14', '20 A', 'trailer socket pin 4'], ['Block 4 · fuse 15', '25 A', 'trailer module'], ['Block 3 · fuse 4', '7.5 A', 'trailer module']].map(([a, b, c], i) => (
         <g transform={`translate(636 ${78 + i * 36})`}>
           <rect width="334" height="30" rx="6" fill="#13243d" stroke="#2b4467" />
-          {T(10, 13, a, { size: 11, w: 800 })}{T(130, 13, b, { size: 11, w: 800, fill: '#ff9f1c' })}{T(10, 25, c, { size: 10, w: 600, fill: '#9fb3c8' })}
+          {T(10, 13, a, { size: 11, w: 800 })}{T(200, 13, b, { size: 11, w: 800, fill: '#ff9f1c' })}{T(10, 25, c, { size: 10, w: 600, fill: '#9fb3c8' })}
         </g>
       ))}
       {T(636, 238, 'ADDITIONAL TURN SIGNAL MODULE (if fitted)', { size: 11.5, fill: AMB })}
-      {[['20', 'RED/DK BLU', 'power in (fuse blk 4 f13)'], ['17', 'BRN', 'ground → G301'], ['5', 'DK GRN/GRY', 'turn command from SAM'], ['2', 'BLK/WHT', 'left rear turn'], ['11', 'BLK/DK GRN', 'right rear turn'], ['8', 'DK GRN/WHT', 'left turn (upfitter X52/9)'], ['14', 'DK GRN/RED', 'right turn (upfitter X52/10)']].map(([p, c, d], i) => (
+      {[['20', 'RED/DK BLU', 'power in (F55/1 fuse 9)'], ['17', 'BRN', 'ground → G301'], ['5', 'DK GRN/GRY', 'turn command from SAM'], ['2', 'BLK/WHT', 'left rear turn'], ['11', 'BLK/DK GRN', 'right rear turn'], ['8', 'DK GRN/WHT', 'left turn (upfitter X52/9)'], ['14', 'DK GRN/RED', 'right turn (upfitter X52/10)']].map(([p, c, d], i) => (
         <g transform={`translate(636 ${250 + i * 32})`}>
           <rect width="30" height="24" rx="5" fill="#13243d" stroke={AMB} stroke-width="1.6" />{T(15, 17, p, { size: 11.5, anchor: 'middle', w: 800 })}
           {T(40, 11, c, { size: 10.5, w: 800 })}{T(40, 23, d, { size: 10, w: 600, fill: '#9fb3c8' })}
@@ -85,7 +85,7 @@ export function FindSeat() {
       <rect x="632" y="482" width="342" height="150" rx="8" fill="#13243d" stroke={AMB} stroke-width="1.4" />
       {T(644, 502, 'TEST ORDER', { size: 11.5, fill: AMB })}
       {T(644, 522, '1 · Open the seat-base fuse box. Is there a', { size: 10.5, w: 600 })}{T(656, 536, 'module under the seat at all? (photo it)', { size: 10.5, w: 600 })}
-      {T(644, 556, '2 · Key on: block 4 fuse 13 → 12 V both sides?', { size: 10.5, w: 600 })}
+      {T(644, 556, '2 · Key on: F55/1 fuse 9 → 12 V both sides?', { size: 10.5, w: 600 })}
       {T(644, 576, '3 · Hazards on: pins 2 and 11 pulse 0↔12 V?', { size: 10.5, w: 600 })}
       {T(644, 596, '4 · Pin 17 to battery −: 0.2 V or less', { size: 10.5, w: 600 })}
       {T(644, 616, 'No module? Then the rear turns come straight', { size: 10.5, w: 600, fill: '#9fb3c8' })}

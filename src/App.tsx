@@ -22,7 +22,7 @@ const TABS = [
   { key: 'library', label: 'Library', icon: 'library' },
   { key: 'more', label: 'More', icon: 'more' },
 ];
-const TAB_OF: Record<string, string> = { sheet: 'library', xray: 'more', grounds: 'more', step: 'plan', suspect: 'suspects', ref: 'library', map: 'more', zone: 'more', timeline: 'more', van: 'more', share: 'more', summary: 'more', settings: 'more' };
+const TAB_OF: Record<string, string> = { sheet: 'library', xray: 'more', grounds: 'more', fuses: 'more', step: 'plan', suspect: 'suspects', ref: 'library', map: 'more', zone: 'more', timeline: 'more', van: 'more', share: 'more', summary: 'more', settings: 'more' };
 
 function SyncPill() {
   if (status.auth === 'demo') return <span class="sync-pill" title="Demo: saved on this phone only"><span class="dot" style="background:var(--accent)" />Demo</span>;
@@ -68,6 +68,12 @@ function LazyGrounds() {
   if (!GroundsMod) { import('./screens/Grounds').then((m) => { GroundsMod = m; set(1); }); return <p class="muted">Loading ground map…</p>; }
   return <GroundsMod.Grounds />;
 }
+let FusesMod: typeof import('./screens/Fuses') | null = null;
+function LazyFuses() {
+  const [, set] = useState(0);
+  if (!FusesMod) { import('./screens/Fuses').then((m) => { FusesMod = m; set(1); }); return <p class="muted">Loading fuses…</p>; }
+  return <FusesMod.Fuses />;
+}
 let XrayMod: typeof import('./screens/Xray') | null = null;
 function LazyXray() {
   const [, set] = useState(0);
@@ -97,6 +103,7 @@ function Screen({ r }: { r: string[] }) {
     case 'sheet': return <LazySheet />;
     case 'xray': return <LazyXray />;
     case 'grounds': return <LazyGrounds />;
+    case 'fuses': return <LazyFuses />;
     default: return <Home />;
   }
 }
@@ -111,7 +118,7 @@ export function App() {
   return (
     <>
       <a class="visually-hidden" href="#main">Skip to content</a>
-      <div class={`app${r[0] === 'sheet' || r[0] === 'xray' || r[0] === 'grounds' ? ' wide' : ''}`}>
+      <div class={`app${r[0] === 'sheet' || r[0] === 'xray' || r[0] === 'grounds' || r[0] === 'fuses' ? ' wide' : ''}`}>
         <header class="topbar">
           <a class="brand" href="#/"><span class="brand-mark"><Icon name="van" /></span>Van Fix</a>
           <span class="spacer" />
