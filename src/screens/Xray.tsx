@@ -7,6 +7,7 @@ import { Chips, PageHead, Prov } from '../components/ui';
 import { LAYERS, LAYER_COLOR, XLINKS, XNODES, XrayVan, type Layer, type XNode } from '../illus/xray';
 import { FindB12 } from '../illus/find-b12';
 import { FindRearTurn } from '../illus/find-rear-turn';
+import { FindSeat } from '../illus/find-seat';
 import { openSheet } from './sheets';
 import { href } from '../lib/router';
 import { list, useStore } from '../lib/store';
@@ -101,6 +102,12 @@ export function Xray() {
         <p class="small muted" style="margin:0 0 8px">Wiring, pins and colours from Figs. 22-23 <Prov p="SOURCE" />. Places are the manual’s words; exact spots and wire routes are approximate.</p>
         <div class="xr-wrap"><FindRearTurn /></div>
         <button type="button" class="btn sm" style="margin-top:10px" onClick={() => openSheet('photo', { caption: 'Tail lamp plug / ground G303 (rear turn signals)' })}><Icon name="camera" />Photograph the tail lamp plug or G303</button>
+      </section>
+      <section class="section" id="find-seat">
+        <div class="section-head"><h2>Under the driver seat (rear turn signals / trailer)</h2></div>
+        <p class="small muted" style="margin:0 0 8px">No relay drives the rear turn signals. Fuses and the optional turn signal module from Fig. 23 and the 2015 Mercedes fuse sheet <Prov p="SOURCE" />; positions inside the seat base are approximate.</p>
+        <div class="xr-wrap"><FindSeat /></div>
+        <button type="button" class="btn sm" style="margin-top:10px" onClick={() => openSheet('photo', { caption: 'Under the driver seat: fuse box / turn signal module' })}><Icon name="camera" />Photograph under the seat</button>
       </section>
       <section class="section" id="find-b12">
         <div class="section-head"><h2>Where to find the A/C pressure sensor (B12)</h2></div>
